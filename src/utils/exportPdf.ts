@@ -197,3 +197,4 @@ export function exportReportToPdf(report: PeriodReport): void {
   const filename = `Lena_Dena_Hisaab_${report.periodKey}_Statement.pdf`;
   doc.save(filename);
 }
+

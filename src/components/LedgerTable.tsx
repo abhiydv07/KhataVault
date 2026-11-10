@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, CheckSquare, Square, Calculator } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Square, Calculator, Lock } from 'lucide-react';
 import { LedgerEntry } from '../types/hisaab';
 import { evaluateExpression } from '../utils/mathParser';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
@@ -12,6 +12,8 @@ interface LedgerTableProps {
   onDeleteRow: (entry: LedgerEntry, index: number, type: 'lena' | 'dena') => void;
   knownFriendNames: string[];
   lang: Language;
+  isReadOnly?: boolean;
+  onOpenBilling?: () => void;
 }
 
 export const LedgerTable: React.FC<LedgerTableProps> = ({
@@ -21,6 +23,8 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
   onDeleteRow,
   knownFriendNames,
   lang,
+  isReadOnly = false,
+  onOpenBilling,
 }) => {
   const t = translations[lang];
   const isLena = type === 'lena';
@@ -251,18 +255,29 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
 
       {/* Add Row Button & Bottom summary */}
       <div className="p-3 border-t border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={handleAddRow}
-          className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition ${
-            isLena
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
-              : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20'
-          }`}
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t.addRow}</span>
-        </button>
+        {isReadOnly ? (
+          <button
+            type="button"
+            onClick={onOpenBilling}
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition"
+          >
+            <Lock className="w-4 h-4" />
+            <span>Trial Expired — Upgrade to Add Rows</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAddRow}
+            className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition ${
+              isLena
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
+                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20'
+            }`}
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t.addRow}</span>
+          </button>
+        )}
 
         {!isLena && uplineSubtotal !== 0 && (
           <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">

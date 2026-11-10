@@ -7,6 +7,7 @@ import {
   Moon, 
   Users, 
   BarChart3,
+  Crown,
   Sparkles, 
   Trash2, 
   CheckCircle2, 
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Language, translations } from '../utils/i18n';
 import { SyncState } from '../services/syncManager';
+import { UserSubscription } from '../types/subscription';
 
 interface HeaderProps {
   selectedDate: string;
@@ -31,10 +33,12 @@ interface HeaderProps {
   onOpenDirectory: () => void;
   onOpenReports: () => void;
   onOpenSettings: () => void;
+  onOpenBilling: () => void;
   onLoadSample: () => void;
   onClearSheet: () => void;
   saveStatus: 'saved' | 'saving';
   syncState: SyncState;
+  subscription: UserSubscription;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,10 +51,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDirectory,
   onOpenReports,
   onOpenSettings,
+  onOpenBilling,
   onLoadSample,
   onClearSheet,
   saveStatus,
   syncState,
+  subscription,
 }) => {
   const t = translations[lang];
 
@@ -210,6 +216,24 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{t.reports}</span>
+            </button>
+
+            {/* Subscription & Billing */}
+            <button
+              onClick={onOpenBilling}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
+                subscription.isExpired
+                  ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700 animate-pulse'
+                  : subscription.status === 'active'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
+              }`}
+              title="Subscription & Billing"
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">
+                {subscription.isExpired ? 'Upgrade' : subscription.status === 'active' ? 'Pro' : 'Trial'}
+              </span>
             </button>
 
             {/* Load Sample Data */}

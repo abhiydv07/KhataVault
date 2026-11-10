@@ -11,6 +11,8 @@ interface HisaabBlockCardProps {
   cashChargeAmount: number;
   onChange: (updated: HisaabBlock) => void;
   lang: Language;
+  isReadOnly?: boolean;
+  onOpenBilling?: () => void;
 }
 
 export const HisaabBlockCard: React.FC<HisaabBlockCardProps> = ({
@@ -19,6 +21,8 @@ export const HisaabBlockCard: React.FC<HisaabBlockCardProps> = ({
   cashChargeAmount,
   onChange,
   lang,
+  isReadOnly = false,
+  onOpenBilling,
 }) => {
   const t = translations[lang];
 
@@ -39,6 +43,10 @@ export const HisaabBlockCard: React.FC<HisaabBlockCardProps> = ({
 
   // Add custom item
   const handleAddCustomItem = () => {
+    if (isReadOnly) {
+      if (onOpenBilling) onOpenBilling();
+      return;
+    }
     const newItem: CustomHisaabItem = {
       id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       label: '',

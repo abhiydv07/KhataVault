@@ -134,3 +134,4 @@ describe('Reports Engine Aggregations', () => {
     expect(report.topCreditors.map((p) => p.name)).toContain('Shyam');
   });
 });
+

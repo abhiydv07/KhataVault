@@ -7,13 +7,17 @@ import { FriendDirectoryModal } from './components/FriendDirectoryModal';
 import { ReportsModal } from './components/ReportsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { BillingModal } from './components/BillingModal';
+import { PaywallBanner } from './components/PaywallBanner';
 import { UndoToast } from './components/UndoToast';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
+import { UserSubscription } from './types/subscription';
 import { calculateSheet, createEmptyDaySheet } from './utils/calculatorEngine';
 import { storageService } from './utils/storage';
 import { Language, translations } from './utils/i18n';
 import { syncManager, SyncState } from './services/syncManager';
 import { authService } from './services/supabase';
+import { subscriptionService } from './services/subscriptionService';
 import { FileText } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -43,10 +47,16 @@ export const App: React.FC = () => {
   const [syncState, setSyncState] = useState<SyncState>(() => syncManager.getState());
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
+  // Subscription State
+  const [subscription, setSubscription] = useState<UserSubscription>(() => {
+    return subscriptionService.getLocalSubscription(Date.now());
+  });
+
   // Modals & Directory
   const [isDirOpen, setIsDirOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isBillingOpen, setIsBillingOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
     return !localStorage.getItem('onboarding_completed');
   });
@@ -73,7 +83,7 @@ export const App: React.FC = () => {
     }
   }, [isDark]);
 
-  // Subscribe to Sync Manager and Auth
+  // Subscribe to Sync Manager, Auth & Subscription changes
   useEffect(() => {
     const unsubSync = syncManager.subscribe((state) => {
       setSyncState(state);
@@ -81,15 +91,23 @@ export const App: React.FC = () => {
 
     const unsubAuth = authService.onAuthStateChange((user) => {
       setUserEmail(user?.email || null);
+      subscriptionService.getSubscription(user?.id).then(setSubscription);
     });
 
     authService.getSession().then(({ user }) => {
       setUserEmail(user?.email || null);
+      subscriptionService.getSubscription(user?.id).then(setSubscription);
     });
+
+    const handleSubChange = () => {
+      subscriptionService.getSubscription().then(setSubscription);
+    };
+    window.addEventListener('subscription_change', handleSubChange);
 
     return () => {
       unsubSync();
       unsubAuth();
+      window.removeEventListener('subscription_change', handleSubChange);
     };
   }, []);
 
@@ -122,6 +140,12 @@ export const App: React.FC = () => {
 
   // 3. Auto-save sheet with debounce & cloud sync queue
   const triggerAutoSave = (updatedSheet: DayHisaabSheet) => {
+    // If paywall is active (expired trial), do not allow modifying sheets
+    if (!subscription.canEdit) {
+      setIsBillingOpen(true);
+      return;
+    }
+
     setSaveStatus('saving');
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -135,6 +159,9 @@ export const App: React.FC = () => {
         // Queue this month for Google Drive synchronization
         const monthKey = updatedSheet.date.substring(0, 7);
         syncManager.queueMonthSync(monthKey);
+
+        // Verify subscription status
+        subscriptionService.getSubscription().then(setSubscription);
 
         // Refresh friends in background
         const updatedFriends = await storageService.getFriendSummaries();
@@ -239,12 +266,27 @@ export const App: React.FC = () => {
         isDark={isDark}
         onToggleDark={() => setIsDark(!isDark)}
         onOpenDirectory={() => setIsDirOpen(true)}
-        onOpenReports={() => setIsReportsOpen(true)}
+        onOpenReports={() => {
+          if (subscription.canViewReports) {
+            setIsReportsOpen(true);
+          } else {
+            setIsBillingOpen(true);
+          }
+        }}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenBilling={() => setIsBillingOpen(true)}
         onLoadSample={handleLoadSample}
         onClearSheet={handleClearSheet}
         saveStatus={saveStatus}
         syncState={syncState}
+        subscription={subscription}
+      />
+
+      {/* Paywall Banner if trial/subscription is expired */}
+      <PaywallBanner
+        subscription={subscription}
+        onOpenBilling={() => setIsBillingOpen(true)}
+        lang={lang}
       />
 
       {/* Main Workspace */}
@@ -301,6 +343,8 @@ export const App: React.FC = () => {
               onDeleteRow={handleDeleteRow}
               knownFriendNames={knownFriendNames}
               lang={lang}
+              isReadOnly={!subscription.canEdit}
+              onOpenBilling={() => setIsBillingOpen(true)}
             />
           </div>
 
@@ -313,6 +357,8 @@ export const App: React.FC = () => {
               onDeleteRow={handleDeleteRow}
               knownFriendNames={knownFriendNames}
               lang={lang}
+              isReadOnly={!subscription.canEdit}
+              onOpenBilling={() => setIsBillingOpen(true)}
             />
           </div>
 
@@ -326,6 +372,8 @@ export const App: React.FC = () => {
             cashChargeAmount={calculatedResults.cashChargeAmount}
             onChange={handleHisaabBlockChange}
             lang={lang}
+            isReadOnly={!subscription.canEdit}
+            onOpenBilling={() => setIsBillingOpen(true)}
           />
         </div>
 
@@ -369,6 +417,15 @@ export const App: React.FC = () => {
         syncState={syncState}
         userEmail={userEmail}
         currentMonth={selectedDate.substring(0, 7)}
+        lang={lang}
+      />
+
+      {/* Subscription & Billing Modal */}
+      <BillingModal
+        isOpen={isBillingOpen}
+        onClose={() => setIsBillingOpen(false)}
+        subscription={subscription}
+        userEmail={userEmail}
         lang={lang}
       />
 
