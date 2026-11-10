@@ -61,6 +61,10 @@ export const translations = {
     languageToggle: 'हिंदी / English',
     saveStatusSaved: 'Saved',
     saveStatusSaving: 'Saving...',
+    whatsappShare: 'WhatsApp Share',
+    cashCounter: 'Cash Counter',
+    copyFromYesterday: 'Copy Parties from Yesterday',
+    copyFromYesterdayDone: '✓ Copied!',
   },
   hi: {
     appName: 'लेना देना हिसाब',
@@ -122,6 +126,10 @@ export const translations = {
     languageToggle: 'English / हिंदी',
     saveStatusSaved: 'सुरक्षित (सेव्ड)',
     saveStatusSaving: 'सेव हो रहा है...',
+    whatsappShare: 'WhatsApp शेयर',
+    cashCounter: 'नोट गिनती',
+    copyFromYesterday: 'कल की पार्टियां कॉपी करें',
+    copyFromYesterdayDone: '✓ कॉपी हो गया!',
   }
 };
 

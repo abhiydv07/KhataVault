@@ -1,9 +1,14 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { PeriodReport } from './reportsEngine';
 import { formatIndianCurrency } from './currencyFormatter';
 
-export function exportReportToPdf(report: PeriodReport): void {
+/**
+ * Dynamically loads jsPDF and autoTable only when user clicks export.
+ * This keeps the main application bundle ultra-lightweight.
+ */
+export async function exportReportToPdf(report: PeriodReport): Promise<void> {
+  const { jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -197,4 +202,3 @@ export function exportReportToPdf(report: PeriodReport): void {
   const filename = `Lena_Dena_Hisaab_${report.periodKey}_Statement.pdf`;
   doc.save(filename);
 }
-

@@ -11,6 +11,8 @@ import { BillingModal } from './components/BillingModal';
 import { LegalModal, LegalTab } from './components/LegalModal';
 import { PaywallBanner } from './components/PaywallBanner';
 import { UndoToast } from './components/UndoToast';
+import { WhatsAppShareModal } from './components/WhatsAppShareModal';
+import { CashCounterModal } from './components/CashCounterModal';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
 import { UserSubscription } from './types/subscription';
 import { calculateSheet, createEmptyDaySheet } from './utils/calculatorEngine';
@@ -19,7 +21,7 @@ import { Language, translations } from './utils/i18n';
 import { syncManager, SyncState } from './services/syncManager';
 import { authService } from './services/supabase';
 import { subscriptionService } from './services/subscriptionService';
-import { FileText } from 'lucide-react';
+import { FileText, MessageCircle, Coins, Copy } from 'lucide-react';
 
 export const App: React.FC = () => {
   // 1. Core State
@@ -62,8 +64,13 @@ export const App: React.FC = () => {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
     return !localStorage.getItem('onboarding_completed');
   });
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [isCashCounterOpen, setIsCashCounterOpen] = useState(false);
 
   const [friends, setFriends] = useState<FriendSummary[]>([]);
+
+  // Copy from Yesterday feature state
+  const [copiedFromYesterday, setCopiedFromYesterday] = useState(false);
 
   // Undo System for deleted rows
   const [deletedItem, setDeletedItem] = useState<{
@@ -244,6 +251,48 @@ export const App: React.FC = () => {
     }
   };
 
+  // 8b. Copy Parties from Yesterday (names only, empty amounts)
+  const handleCopyFromYesterday = async () => {
+    const yesterday = new Date(selectedDate + 'T00:00:00');
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    const prevSheet = await storageService.getDaySheet(yesterdayStr);
+    const hasData = prevSheet.lenaEntries.length > 0 || prevSheet.denaEntries.length > 0;
+    if (!hasData) {
+      alert(lang === 'hi' ? 'कल की कोई एंट्री नहीं मिली।' : 'No entries found for yesterday.');
+      return;
+    }
+
+    const confirmMsg =
+      lang === 'hi'
+        ? `कल (${yesterdayStr}) की ${prevSheet.lenaEntries.length + prevSheet.denaEntries.length} पार्टियां कॉपी करें?`
+        : `Copy ${prevSheet.lenaEntries.length + prevSheet.denaEntries.length} parties from yesterday (${yesterdayStr})?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    const now = Date.now();
+    const makeFresh = (e: LedgerEntry): LedgerEntry => ({
+      ...e,
+      id: `entry_${now}_${Math.random().toString(36).substring(2, 7)}`,
+      rawExpression: '',
+      evaluatedAmount: 0,
+      rawUplineExpression: e.rawUplineExpression !== undefined ? '' : undefined,
+      upline: e.upline !== undefined ? 0 : undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const next: DayHisaabSheet = {
+      ...sheet,
+      lenaEntries: prevSheet.lenaEntries.map(makeFresh),
+      denaEntries: prevSheet.denaEntries.map(makeFresh),
+    };
+    setSheet(next);
+    triggerAutoSave(next);
+    setCopiedFromYesterday(true);
+    setTimeout(() => setCopiedFromYesterday(false), 3000);
+  };
+
   // 8. Calculations
   const calculatedResults = useMemo(() => {
     return calculateSheet(sheet);
@@ -331,6 +380,44 @@ export const App: React.FC = () => {
           >
             Adjustments
           </button>
+        </div>
+
+        {/* Quick Action Bar: WhatsApp Share | Cash Counter | Copy from Yesterday */}
+        <div className="flex flex-wrap gap-2">
+          {/* WhatsApp Share */}
+          <button
+            onClick={() => setIsWhatsAppOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#20b558] text-white shadow-sm transition"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {lang === 'hi' ? 'WhatsApp शेयर' : 'WhatsApp Share'}
+          </button>
+
+          {/* Cash Counter */}
+          <button
+            onClick={() => setIsCashCounterOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition"
+          >
+            <Coins className="w-4 h-4" />
+            {lang === 'hi' ? 'नोट गिनती' : 'Cash Counter'}
+          </button>
+
+          {/* Copy from Yesterday */}
+          {sheet.lenaEntries.length === 0 && sheet.denaEntries.length === 0 && subscription.canEdit && (
+            <button
+              onClick={handleCopyFromYesterday}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition ${
+                copiedFromYesterday
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600'
+              }`}
+            >
+              <Copy className="w-4 h-4" />
+              {copiedFromYesterday
+                ? (lang === 'hi' ? '✓ कॉपी हो गया!' : '✓ Copied!')
+                : (lang === 'hi' ? 'कल की पार्टियां कॉपी करें' : 'Copy Parties from Yesterday')}
+            </button>
+          )}
         </div>
 
         {/* Two-Column Ledger Section */}
@@ -499,6 +586,26 @@ export const App: React.FC = () => {
           Lena Dena Hisaab — 100% Private Ledger Stored in Your Own Google Drive (appdata)
         </p>
       </footer>
+
+      {/* WhatsApp Share Modal */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+        results={calculatedResults}
+        date={selectedDate}
+        lenaEntries={sheet.lenaEntries}
+        denaEntries={sheet.denaEntries}
+        lang={lang}
+      />
+
+      {/* Cash Denomination Counter Modal */}
+      <CashCounterModal
+        isOpen={isCashCounterOpen}
+        onClose={() => setIsCashCounterOpen(false)}
+        avlBalance={calculatedResults.avlBalance}
+        lang={lang}
+      />
+
     </div>
   );
 };

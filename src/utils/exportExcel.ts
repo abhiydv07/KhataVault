@@ -1,7 +1,11 @@
-import * as XLSX from 'xlsx';
 import { PeriodReport } from './reportsEngine';
 
-export function exportReportToExcel(report: PeriodReport): void {
+/**
+ * Dynamically loads SheetJS (xlsx) only when user clicks export.
+ * This keeps the main application bundle ultra-lightweight.
+ */
+export async function exportReportToExcel(report: PeriodReport): Promise<void> {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   // 1. Executive Summary Sheet
