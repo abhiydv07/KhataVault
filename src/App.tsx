@@ -18,6 +18,8 @@ import { VoiceEntryModal } from './components/VoiceEntryModal';
 import { FirmSwitcherModal } from './components/FirmSwitcherModal';
 import { PocketCalculatorModal } from './components/PocketCalculatorModal';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
+import { SmartImportModal } from './components/SmartImportModal';
+import { ExtractedLedgerData } from './utils/documentScanner';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
 import { UserSubscription } from './types/subscription';
 import { calculateSheet, createEmptyDaySheet } from './utils/calculatorEngine';
@@ -28,7 +30,7 @@ import { Language, translations } from './utils/i18n';
 import { syncManager, SyncState } from './services/syncManager';
 import { authService } from './services/supabase';
 import { subscriptionService } from './services/subscriptionService';
-import { FileText, MessageCircle, Coins, Copy, Mic } from 'lucide-react';
+import { FileText, MessageCircle, Coins, Copy, Mic, Camera } from 'lucide-react';
 
 export const App: React.FC = () => {
   // 1. Core State
@@ -76,6 +78,7 @@ export const App: React.FC = () => {
   const [isVoiceEntryOpen, setIsVoiceEntryOpen] = useState(false);
   const [isFirmSwitcherOpen, setIsFirmSwitcherOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
   const [activeFirm, setActiveFirm] = useState<FirmProfile>(() => firmManager.getActiveFirm());
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     return Boolean(
@@ -250,6 +253,57 @@ export const App: React.FC = () => {
     const next = { ...sheet, note };
     setSheet(next);
     triggerAutoSave(next);
+  };
+
+  const handleApplyImportedData = (
+    data: ExtractedLedgerData,
+    mode: 'merge' | 'replace'
+  ) => {
+    const now = Date.now();
+    const newLena: LedgerEntry[] = data.lena.map((item, idx) => ({
+      id: `entry_imp_l_${now}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      friendName: item.friendName,
+      rawExpression: item.rawExpression || String(item.amount),
+      evaluatedAmount: item.amount,
+      countInTotal: true,
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const newDena: LedgerEntry[] = data.dena.map((item, idx) => ({
+      id: `entry_imp_d_${now}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      friendName: item.friendName,
+      rawExpression: item.rawExpression || String(item.amount),
+      evaluatedAmount: item.amount,
+      countInTotal: true,
+      upline: item.upline || 0,
+      rawUplineExpression: item.rawUplineExpression || (item.upline ? String(item.upline) : ''),
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const updatedSheet: DayHisaabSheet = {
+      ...sheet,
+      lenaEntries: mode === 'replace' ? newLena : [...sheet.lenaEntries, ...newLena],
+      denaEntries: mode === 'replace' ? newDena : [...sheet.denaEntries, ...newDena],
+      hisaabBlock: {
+        ...sheet.hisaabBlock,
+        cashChargePercent:
+          data.cashChargePercent !== undefined
+            ? data.cashChargePercent
+            : sheet.hisaabBlock.cashChargePercent,
+      },
+      note: data.note
+        ? mode === 'replace'
+          ? data.note
+          : sheet.note
+          ? `${sheet.note} • ${data.note}`
+          : data.note
+        : sheet.note,
+    };
+
+    setSheet(updatedSheet);
+    triggerAutoSave(updatedSheet);
   };
 
   // 5. Undo Row Deletion
@@ -464,6 +518,16 @@ export const App: React.FC = () => {
           >
             <Mic className="w-4 h-4" />
             <span>{lang === 'hi' ? 'बोलकर एंट्री जोड़ें' : 'Voice Entry (Hindi/EN)'}</span>
+          </button>
+
+          {/* Smart Auto-Scan (Photo, PDF, Excel) */}
+          <button
+            onClick={() => setIsSmartImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-600/25 transition transform active:scale-95"
+            title="Auto-scan photo of paper hisaab, PDF statement, or Excel spreadsheet"
+          >
+            <Camera className="w-4 h-4" />
+            <span>{lang === 'hi' ? '📸 फ़ोटो/PDF/Excel स्कैन' : '📸 Auto-Scan (Photo/PDF/Excel)'}</span>
           </button>
 
           {/* Copy from Yesterday */}
@@ -706,6 +770,14 @@ export const App: React.FC = () => {
       <PocketCalculatorModal
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
+      />
+
+      {/* AI Smart Document & Photo Scanner Modal */}
+      <SmartImportModal
+        isOpen={isSmartImportOpen}
+        onClose={() => setIsSmartImportOpen(false)}
+        onApplyData={handleApplyImportedData}
+        lang={lang}
       />
 
       {/* Install PWA Mobile Banner */}
