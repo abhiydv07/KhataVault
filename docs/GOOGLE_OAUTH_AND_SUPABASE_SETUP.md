@@ -84,3 +84,4 @@ VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 2. **Monthly Partitioning**: Data is stored as `YYYY-MM.json` inside the isolated `appDataFolder`.
 3. **Offline-First**: You can work completely offline; changes are saved to browser local storage and queued. Once internet connectivity is restored, the queue auto-syncs to Google Drive.
 4. **Client-Side AES-GCM Encryption**: Users can optionally enter a private passphrase in Settings. The browser uses Web Crypto AES-GCM to encrypt the file before uploading.
+

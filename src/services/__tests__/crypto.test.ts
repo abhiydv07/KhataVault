@@ -46,3 +46,4 @@ describe('Web Crypto AES-GCM Service', () => {
     await expect(encryptData({ a: 1 }, '   ')).rejects.toThrow('Passphrase cannot be empty');
   });
 });
+

@@ -137,3 +137,4 @@ export const authService = {
     return () => window.removeEventListener('auth_state_change', handler);
   },
 };
+

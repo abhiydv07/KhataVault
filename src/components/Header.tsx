@@ -6,6 +6,7 @@ import {
   Sun, 
   Moon, 
   Users, 
+  BarChart3,
   Sparkles, 
   Trash2, 
   CheckCircle2, 
@@ -28,6 +29,7 @@ interface HeaderProps {
   isDark: boolean;
   onToggleDark: () => void;
   onOpenDirectory: () => void;
+  onOpenReports: () => void;
   onOpenSettings: () => void;
   onLoadSample: () => void;
   onClearSheet: () => void;
@@ -43,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   isDark,
   onToggleDark,
   onOpenDirectory,
+  onOpenReports,
   onOpenSettings,
   onLoadSample,
   onClearSheet,
@@ -197,6 +200,16 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Users className="w-3.5 h-3.5 text-blue-500" />
               <span className="hidden md:inline">{t.friendDirectory}</span>
+            </button>
+
+            {/* Monthly & Yearly Reports */}
+            <button
+              onClick={onOpenReports}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition"
+              title={t.reports}
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>{t.reports}</span>
             </button>
 
             {/* Load Sample Data */}

@@ -4,6 +4,7 @@ import { VerdictCard } from './components/VerdictCard';
 import { LedgerTable } from './components/LedgerTable';
 import { HisaabBlockCard } from './components/HisaabBlockCard';
 import { FriendDirectoryModal } from './components/FriendDirectoryModal';
+import { ReportsModal } from './components/ReportsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { UndoToast } from './components/UndoToast';
@@ -44,6 +45,7 @@ export const App: React.FC = () => {
 
   // Modals & Directory
   const [isDirOpen, setIsDirOpen] = useState(false);
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
     return !localStorage.getItem('onboarding_completed');
@@ -237,6 +239,7 @@ export const App: React.FC = () => {
         isDark={isDark}
         onToggleDark={() => setIsDark(!isDark)}
         onOpenDirectory={() => setIsDirOpen(true)}
+        onOpenReports={() => setIsReportsOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onLoadSample={handleLoadSample}
         onClearSheet={handleClearSheet}
@@ -348,6 +351,14 @@ export const App: React.FC = () => {
         isOpen={isDirOpen}
         onClose={() => setIsDirOpen(false)}
         friends={friends}
+        lang={lang}
+      />
+
+      {/* Monthly & Yearly Reports Modal */}
+      <ReportsModal
+        isOpen={isReportsOpen}
+        onClose={() => setIsReportsOpen(false)}
+        currentDate={selectedDate}
         lang={lang}
       />
 
