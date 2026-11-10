@@ -221,3 +221,4 @@ export const FirmSwitcherModal: React.FC<FirmSwitcherModalProps> = ({
     </div>
   );
 };
+

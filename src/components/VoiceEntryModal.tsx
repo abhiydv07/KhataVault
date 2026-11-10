@@ -300,3 +300,4 @@ export const VoiceEntryModal: React.FC<VoiceEntryModalProps> = ({
     </div>
   );
 };
+

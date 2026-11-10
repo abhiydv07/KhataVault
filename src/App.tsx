@@ -78,7 +78,11 @@ export const App: React.FC = () => {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [activeFirm, setActiveFirm] = useState<FirmProfile>(() => firmManager.getActiveFirm());
   const [isLocked, setIsLocked] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'));
+    return Boolean(
+      localStorage.getItem('khatavault_app_pin') ||
+      localStorage.getItem('khatasetu_app_pin') ||
+      localStorage.getItem('lekhasetu_app_pin')
+    );
   });
 
   const [friends, setFriends] = useState<FriendSummary[]>([]);
@@ -130,12 +134,14 @@ export const App: React.FC = () => {
     const handleFirmChange = () => {
       setActiveFirm(firmManager.getActiveFirm());
     };
+    window.addEventListener('khatavault_firm_changed', handleFirmChange);
     window.addEventListener('khatasetu_firm_changed', handleFirmChange);
 
     return () => {
       unsubSync();
       unsubAuth();
       window.removeEventListener('subscription_change', handleSubChange);
+      window.removeEventListener('khatavault_firm_changed', handleFirmChange);
       window.removeEventListener('khatasetu_firm_changed', handleFirmChange);
     };
   }, []);
@@ -371,7 +377,11 @@ export const App: React.FC = () => {
         saveStatus={saveStatus}
         syncState={syncState}
         subscription={subscription}
-        hasPin={Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'))}
+        hasPin={Boolean(
+          localStorage.getItem('khatavault_app_pin') ||
+          localStorage.getItem('khatasetu_app_pin') ||
+          localStorage.getItem('lekhasetu_app_pin')
+        )}
         onLockApp={() => setIsLocked(true)}
         activeFirmName={activeFirm.name}
         onOpenFirmSwitcher={() => setIsFirmSwitcherOpen(true)}
@@ -637,7 +647,7 @@ export const App: React.FC = () => {
           </button>
         </div>
         <p className="text-[11px] text-slate-400">
-          KhataSetu — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
+          KhataVault — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
         </p>
       </footer>
 

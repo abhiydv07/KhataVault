@@ -4,8 +4,8 @@ export interface FirmProfile {
   createdAt: number;
 }
 
-const FIRMS_STORAGE_KEY = 'khatasetu_firms_list';
-const ACTIVE_FIRM_KEY = 'khatasetu_active_firm_id';
+const FIRMS_STORAGE_KEY = 'khatavault_firms_list';
+const ACTIVE_FIRM_KEY = 'khatavault_active_firm_id';
 
 const DEFAULT_FIRM: FirmProfile = {
   id: 'default',
@@ -37,7 +37,7 @@ export const firmManager = {
   setActiveFirm(firmId: string): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem(ACTIVE_FIRM_KEY, firmId);
-    window.dispatchEvent(new Event('khatasetu_firm_changed'));
+    window.dispatchEvent(new Event('khatavault_firm_changed'));
   },
 
   createFirm(name: string): FirmProfile {
@@ -60,7 +60,7 @@ export const firmManager = {
     if (!trimmed) return;
     const firms = this.getFirms().map((f) => (f.id === firmId ? { ...f, name: trimmed } : f));
     localStorage.setItem(FIRMS_STORAGE_KEY, JSON.stringify(firms));
-    window.dispatchEvent(new Event('khatasetu_firm_changed'));
+    window.dispatchEvent(new Event('khatavault_firm_changed'));
   },
 
   deleteFirm(firmId: string): void {
@@ -72,3 +72,4 @@ export const firmManager = {
     this.setActiveFirm('default');
   },
 };
+

@@ -53,14 +53,14 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
       `💸 कैश चार्ज : ₹${formatIndianCurrency(results.cashChargeAmount)}\n` +
       `⚖️ *शुद्ध फ़र्क : ₹${formatIndianCurrency(Math.abs(results.farak))}*\n\n` +
       `${verdictLabel}\n\n` +
-      `_— KhataSetu (खातासेतु) App_`
+      `_— KhataVault (खाता वॉल्ट) App_`
     : `📊 *Today's Hisaab — ${dateLabel}*\n\n` +
       `🟢 Total Lena  : ₹${formatIndianCurrency(results.totalLena)}\n` +
       `🔴 Total Dena  : ₹${formatIndianCurrency(results.totalDena)}\n` +
       `💸 Cash Charge : ₹${formatIndianCurrency(results.cashChargeAmount)}\n` +
       `⚖️ *Net Farak : ₹${formatIndianCurrency(Math.abs(results.farak))}*\n\n` +
       `${verdictLabel}\n\n` +
-      `_— KhataSetu App_`;
+      `_— KhataVault App_`;
 
   // ---- Party rows that have a name & a non-zero amount ----
   const activeLena = lenaEntries.filter((e) => e.friendName.trim() && e.countInTotal && e.evaluatedAmount !== 0);
@@ -68,19 +68,23 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
 
   const partyReminderMsg = (name: string, amount: number, side: 'lena' | 'dena') => {
     const sign = side === 'lena' ? (isHi ? 'लेना' : 'receivable') : (isHi ? 'देना' : 'payable');
-    const upiId = (typeof window !== 'undefined' ? localStorage.getItem('khatasetu_upi_id') : '')?.trim();
+    const upiId = (
+      typeof window !== 'undefined'
+        ? localStorage.getItem('khatavault_upi_id') || localStorage.getItem('khatasetu_upi_id')
+        : ''
+    )?.trim();
     let upiSection = '';
 
     if (upiId && side === 'lena') {
-      const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('KhataSetu Settlement')}&am=${Math.abs(amount)}&cu=INR`;
+      const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('KhataVault Settlement')}&am=${Math.abs(amount)}&cu=INR`;
       upiSection = isHi
         ? `\n\n📲 *तुरंत UPI से भुगतान करें (GPay / PhonePe / Paytm):*\n${upiLink}`
         : `\n\n📲 *Pay directly via UPI (GPay / PhonePe / Paytm):*\n${upiLink}`;
     }
 
     return isHi
-      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का खाता शेष:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*${upiSection}\n\n_— KhataSetu (खातासेतु) App_`
-      : `Namaste *${name}* Ji 🙏\n\nYour current account balance:\n*₹${formatIndianCurrency(Math.abs(amount))} (${side === 'lena' ? 'You owe us' : 'We owe you'})*${upiSection}\n\n_— KhataSetu App_`;
+      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का खाता शेष:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*${upiSection}\n\n_— KhataVault (खाता वॉल्ट) App_`
+      : `Namaste *${name}* Ji 🙏\n\nYour current account balance:\n*₹${formatIndianCurrency(Math.abs(amount))} (${side === 'lena' ? 'You owe us' : 'We owe you'})*${upiSection}\n\n_— KhataVault App_`;
   };
 
   return (

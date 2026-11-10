@@ -2,8 +2,8 @@ export type Language = 'en' | 'hi';
 
 export const translations = {
   en: {
-    appName: 'KhataSetu',
-    appSubtitle: 'Enterprise Commercial Ledger & Daily Settlement Suite',
+    appName: 'KhataVault',
+    appSubtitle: 'Enterprise Commercial Ledger & Encrypted Settlement Suite',
     
     // Core Ledger Sides (Commercial / Legal standard)
     lena: 'Receivables (Credit)',
@@ -80,8 +80,8 @@ export const translations = {
     calculator: 'Pocket Calculator',
   },
   hi: {
-    appName: 'खातासेतु (KhataSetu)',
-    appSubtitle: 'व्यापारिक बहीखाता एवं दैनिक समाशोधन प्रणाली',
+    appName: 'खाता वॉल्ट (KhataVault)',
+    appSubtitle: 'व्यापारिक बहीखाता एवं सुरक्षित दैनिक समाशोधन प्रणाली',
     
     // Core Ledger Sides (Commercial / Legal Hindi standard)
     lena: 'प्राप्य राशि (जमा / Lena)',

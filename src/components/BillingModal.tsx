@@ -83,7 +83,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
           </div>
 
           <h3 className="text-xl sm:text-2xl font-black">
-            KhataSetu Pro
+            KhataVault Pro
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
             100% private commercial ledger stored in your own Google Drive.
@@ -229,7 +229,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
             <h5 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2.5 flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              Everything Included in KhataSetu:
+              Everything Included in KhataVault:
             </h5>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
               {SUBSCRIPTION_PLANS[selectedPlan].features.map((feat) => (

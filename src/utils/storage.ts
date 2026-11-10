@@ -4,7 +4,10 @@ import { evaluateExpression } from './mathParser';
 
 function getStoragePrefix(): string {
   if (typeof window === 'undefined') return 'lena_dena_hisaab_';
-  const activeId = localStorage.getItem('khatasetu_active_firm_id') || 'default';
+  const activeId =
+    localStorage.getItem('khatavault_active_firm_id') ||
+    localStorage.getItem('khatasetu_active_firm_id') ||
+    'default';
   return activeId === 'default' ? 'lena_dena_hisaab_' : `lena_dena_hisaab_${activeId}_`;
 }
 
@@ -293,7 +296,7 @@ export const storageService = {
       exportedAt: string;
       months: Record<string, MonthHisaabFile>;
     } = {
-      appName: 'KhataSetu',
+      appName: 'KhataVault',
       version: 1,
       exportedAt: new Date().toISOString(),
       months: {}

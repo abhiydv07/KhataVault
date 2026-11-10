@@ -15,7 +15,10 @@ export const AppLockModal: React.FC<AppLockModalProps> = ({ isLocked, onUnlock, 
   if (!isLocked) return null;
 
   const isHi = lang === 'hi';
-  const savedPin = localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin');
+  const savedPin =
+    localStorage.getItem('khatavault_app_pin') ||
+    localStorage.getItem('khatasetu_app_pin') ||
+    localStorage.getItem('lekhasetu_app_pin');
 
   const handleDigit = (digit: string) => {
     if (pin.length >= 4) return;

@@ -21,13 +21,13 @@ class AudioService {
 
   public isEnabled(): boolean {
     if (typeof window === 'undefined') return false;
-    const val = localStorage.getItem('khatasetu_sound_enabled');
+    const val = localStorage.getItem('khatavault_sound_enabled') || localStorage.getItem('khatasetu_sound_enabled');
     return val === null ? true : val === 'true';
   }
 
   public setEnabled(enabled: boolean): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('khatasetu_sound_enabled', String(enabled));
+    localStorage.setItem('khatavault_sound_enabled', String(enabled));
   }
 
   /**
@@ -122,3 +122,4 @@ class AudioService {
 }
 
 export const audioService = new AudioService();
+

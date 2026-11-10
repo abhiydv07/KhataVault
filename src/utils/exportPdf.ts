@@ -22,7 +22,7 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('KHATASETU', 14, 14);
+  doc.text('KHATAVAULT', 14, 14);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -191,7 +191,7 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      `KhataSetu • 100% Private Commercial Ledger • Stored in User Google Drive • Page ${i} of ${pageCount}`,
+      `KhataVault • 100% Private Commercial Ledger • Stored in User Google Drive • Page ${i} of ${pageCount}`,
       105,
       290,
       { align: 'center' }
@@ -199,6 +199,6 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
   }
 
   // Trigger download
-  const filename = `KhataSetu_${report.periodKey}_Statement.pdf`;
+  const filename = `KhataVault_${report.periodKey}_Statement.pdf`;
   doc.save(filename);
 }

@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
-        name: 'KhataSetu - Commercial Ledger',
-        short_name: 'KhataSetu',
-        description: 'Enterprise Commercial Ledger & Daily Settlement with Private Google Drive Sync',
+        name: 'KhataVault - Commercial Ledger',
+        short_name: 'KhataVault',
+        description: 'Enterprise Commercial Ledger & Settlement with Private Google Drive Vault',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',

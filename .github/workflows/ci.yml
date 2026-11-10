@@ -1,4 +1,4 @@
-name: LekhaSetu CI
+name: KhataVault CI
 
 on:
   push:

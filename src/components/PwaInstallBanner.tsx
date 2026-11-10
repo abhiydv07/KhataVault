@@ -15,7 +15,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ lang }) => {
     if (typeof window === 'undefined') return;
 
     // Check if already dismissed this session
-    if (sessionStorage.getItem('khatasetu_pwa_dismissed')) {
+    if (sessionStorage.getItem('khatavault_pwa_dismissed') || sessionStorage.getItem('khatasetu_pwa_dismissed')) {
       return;
     }
 
@@ -43,7 +43,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ lang }) => {
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem('khatasetu_pwa_dismissed', 'true');
+    sessionStorage.setItem('khatavault_pwa_dismissed', 'true');
     setIsVisible(false);
   };
 
@@ -57,7 +57,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ lang }) => {
         </div>
         <div className="min-w-0">
           <h4 className="text-xs font-bold truncate">
-            {isHi ? 'KhataSetu ऐप इंस्टॉल करें' : 'Install KhataSetu App'}
+            {isHi ? 'KhataVault ऐप इंस्टॉल करें' : 'Install KhataVault App'}
           </h4>
           <p className="text-[11px] text-slate-300 truncate">
             {isHi ? 'बिना इंटरनेट तेज़ काम करेगा' : 'Works 100% offline on your home screen'}
@@ -86,3 +86,4 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ lang }) => {
     </div>
   );
 };
+

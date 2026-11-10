@@ -73,7 +73,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             100% Private Ledger
           </div>
           <h2 className="text-xl sm:text-2xl font-black">
-            Welcome to KhataSetu
+            Welcome to KhataVault
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
             Your ledger numbers stay in <strong>your own Google Drive</strong>. Our server stores zero financial data.
