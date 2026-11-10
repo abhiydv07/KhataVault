@@ -662,6 +662,8 @@ export const App: React.FC = () => {
         lenaEntries={sheet.lenaEntries}
         denaEntries={sheet.denaEntries}
         lang={lang}
+        firmName={activeFirm.name}
+        friends={friends}
       />
 
       {/* Cash Denomination Counter Modal */}
