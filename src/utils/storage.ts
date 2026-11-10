@@ -273,6 +273,53 @@ export const storageService = {
 
     await this.saveDaySheet(sampleSheet);
     return sampleSheet;
+  },
+
+  /**
+   * Export complete offline backup containing all recorded months
+   */
+  async exportFullBackup(): Promise<string> {
+    const months = await this.getAllMonths();
+    const backup: {
+      appName: string;
+      version: number;
+      exportedAt: string;
+      months: Record<string, MonthHisaabFile>;
+    } = {
+      appName: 'LekhaSetu',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      months: {}
+    };
+
+    for (const m of months) {
+      backup.months[m] = await this.getMonthFile(m);
+    }
+
+    return JSON.stringify(backup, null, 2);
+  },
+
+  /**
+   * Restore offline backup from JSON string
+   */
+  async restoreFullBackup(jsonString: string): Promise<{ restoredMonths: number; restoredDays: number }> {
+    const data = JSON.parse(jsonString);
+    if (!data || typeof data !== 'object' || !data.months) {
+      throw new Error('Invalid backup file format: missing months container.');
+    }
+
+    let dayCount = 0;
+    const monthKeys = Object.keys(data.months);
+
+    for (const m of monthKeys) {
+      const monthFile: MonthHisaabFile = data.months[m];
+      if (monthFile && monthFile.days) {
+        await this.saveMonthFile(monthFile);
+        dayCount += Object.keys(monthFile.days).length;
+      }
+    }
+
+    return { restoredMonths: monthKeys.length, restoredDays: dayCount };
   }
 };
 

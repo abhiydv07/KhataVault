@@ -39,6 +39,8 @@ interface HeaderProps {
   saveStatus: 'saved' | 'saving';
   syncState: SyncState;
   subscription: UserSubscription;
+  onLockApp?: () => void;
+  hasPin?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
   saveStatus,
   syncState,
   subscription,
+  onLockApp,
+  hasPin,
 }) => {
   const t = translations[lang];
 
@@ -274,6 +278,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
+
+            {/* Quick Screen Lock Button (If PIN enabled) */}
+            {hasPin && onLockApp && (
+              <button
+                onClick={onLockApp}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"
+                title="Lock Screen"
+                aria-label="Lock Screen"
+              >
+                <Lock className="w-4 h-4 text-indigo-500" />
+              </button>
+            )}
 
             {/* Dark Mode Toggle */}
             <button

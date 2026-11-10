@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
-        name: 'Lena Dena Hisaab',
-        short_name: 'Hisaab',
-        description: 'Ledger Calculator with Google Drive Sync and Reports',
+        name: 'LekhaSetu - Commercial Ledger',
+        short_name: 'LekhaSetu',
+        description: 'Enterprise Commercial Ledger & Daily Settlement with Private Google Drive Sync',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',

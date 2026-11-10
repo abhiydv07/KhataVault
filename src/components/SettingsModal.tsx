@@ -11,11 +11,14 @@ import {
   LogOut, 
   ShieldCheck, 
   ExternalLink,
-  KeyRound
+  KeyRound,
+  Download,
+  Upload
 } from 'lucide-react';
 import { syncManager, SyncState } from '../services/syncManager';
 import { authService } from '../services/supabase';
 import { googleDriveService } from '../services/googleDrive';
+import { storageService } from '../utils/storage';
 import { Language } from '../utils/i18n';
 
 interface SettingsModalProps {
@@ -39,8 +42,67 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isPassphraseSaved, setIsPassphraseSaved] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<string | null>(null);
+  const [pinInput, setPinInput] = useState<string>(() => localStorage.getItem('lekhasetu_app_pin') || '');
+  const [isPinSaved, setIsPinSaved] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleSavePin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = pinInput.trim();
+    if (trimmed === '') {
+      localStorage.removeItem('lekhasetu_app_pin');
+    } else if (/^\d{4}$/.test(trimmed)) {
+      localStorage.setItem('lekhasetu_app_pin', trimmed);
+    } else {
+      alert('PIN must be exactly 4 numeric digits.');
+      return;
+    }
+    setIsPinSaved(true);
+    setTimeout(() => setIsPinSaved(false), 2000);
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      const jsonStr = await storageService.exportFullBackup();
+      const dateStr = new Date().toISOString().split('T')[0];
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `LekhaSetu_Complete_Backup_${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setBackupStatus('Backup downloaded successfully!');
+      setTimeout(() => setBackupStatus(null), 3000);
+    } catch (err: any) {
+      alert('Error creating backup: ' + err.message);
+    }
+  };
+
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!window.confirm('Restoring this backup will merge or overwrite current records for matching dates. Continue?')) {
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const result = await storageService.restoreFullBackup(text);
+      setBackupStatus(`Restored ${result.restoredDays} daily sheets across ${result.restoredMonths} months.`);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      alert('Failed to restore backup: ' + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   const handleSavePassphrase = (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,6 +309,92 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {isPassphraseSaved ? 'Saved!' : 'Save Passphrase'}
               </button>
             </form>
+          </div>
+
+          {/* 4-Digit Quick PIN Screen Lock */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    4-Digit Screen Lock PIN
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Locks the ledger interface to protect private balances when handing phone to others.
+                  </p>
+                </div>
+              </div>
+              <div>
+                {localStorage.getItem('lekhasetu_app_pin') ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <Lock className="w-3.5 h-3.5" /> Enabled
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-400">
+                    <Unlock className="w-3.5 h-3.5" /> Off
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <form onSubmit={handleSavePin} className="flex gap-2">
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                placeholder="4-digit PIN (e.g. 1234 or empty to disable)"
+                className="flex-1 px-3 py-2 text-xs font-medium font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+              >
+                {isPinSaved ? 'Saved!' : 'Save PIN'}
+              </button>
+            </form>
+          </div>
+
+          {/* Manual Offline Backup & Restore */}
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Offline Data Backup & Restore
+            </h5>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Download your complete accounting database as an offline JSON snapshot file to keep on your computer or restore at any time.
+            </p>
+
+            {backupStatus && (
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                {backupStatus}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleExportBackup}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-xs transition"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Export Full Backup (.json)</span>
+              </button>
+
+              <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer transition">
+                <Upload className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span>Restore Backup File</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleImportBackup}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
 
           {/* Data Deletion & Privacy Policy */}

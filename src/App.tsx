@@ -13,6 +13,7 @@ import { PaywallBanner } from './components/PaywallBanner';
 import { UndoToast } from './components/UndoToast';
 import { WhatsAppShareModal } from './components/WhatsAppShareModal';
 import { CashCounterModal } from './components/CashCounterModal';
+import { AppLockModal } from './components/AppLockModal';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
 import { UserSubscription } from './types/subscription';
 import { calculateSheet, createEmptyDaySheet } from './utils/calculatorEngine';
@@ -66,6 +67,9 @@ export const App: React.FC = () => {
   });
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isCashCounterOpen, setIsCashCounterOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('lekhasetu_app_pin'));
+  });
 
   const [friends, setFriends] = useState<FriendSummary[]>([]);
 
@@ -331,6 +335,8 @@ export const App: React.FC = () => {
         saveStatus={saveStatus}
         syncState={syncState}
         subscription={subscription}
+        hasPin={Boolean(localStorage.getItem('lekhasetu_app_pin'))}
+        onLockApp={() => setIsLocked(true)}
       />
 
       {/* Paywall Banner if trial/subscription is expired */}
@@ -583,7 +589,7 @@ export const App: React.FC = () => {
           </button>
         </div>
         <p className="text-[11px] text-slate-400">
-          Lena Dena Hisaab — 100% Private Ledger Stored in Your Own Google Drive (appdata)
+          LekhaSetu — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
         </p>
       </footer>
 
@@ -603,6 +609,13 @@ export const App: React.FC = () => {
         isOpen={isCashCounterOpen}
         onClose={() => setIsCashCounterOpen(false)}
         avlBalance={calculatedResults.avlBalance}
+        lang={lang}
+      />
+
+      {/* 4-Digit Screen Lock PIN Modal */}
+      <AppLockModal
+        isLocked={isLocked}
+        onUnlock={() => setIsLocked(false)}
         lang={lang}
       />
 
