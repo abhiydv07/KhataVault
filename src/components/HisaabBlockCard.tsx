@@ -75,17 +75,17 @@ export const HisaabBlockCard: React.FC<HisaabBlockCardProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden transition-all duration-300">
       {/* Title */}
-      <div className="px-4 py-3 bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
           <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base">
-            Hisaab Adjustments & Charges
+          <h3 className="font-black text-slate-800 dark:text-slate-100 text-sm sm:text-base tracking-tight">
+            Commercial Adjustments, Surcharges & Net Cash
           </h3>
         </div>
-        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-          Auto Calculation
+        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+          Auto Calculation Engine
         </div>
       </div>
 

@@ -395,17 +395,17 @@ export const App: React.FC = () => {
         lang={lang}
       />
 
-      {/* Main Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4 sm:space-y-6">
+      {/* Main Workspace - Full-screen fluid enterprise layout */}
+      <main className="flex-1 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* Live Farak Verdict Hero Card */}
         <VerdictCard results={calculatedResults} lang={lang} />
 
         {/* Mobile Tab Switcher */}
-        <div className="flex md:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-bold">
+        <div className="flex md:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl text-xs font-bold shadow-inner">
           <button
             onClick={() => setActiveTab('both')}
-            className={`flex-1 py-1.5 rounded-lg transition ${
+            className={`flex-1 py-2 rounded-xl transition ${
               activeTab === 'both' ? 'bg-white dark:bg-slate-900 shadow-xs text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
@@ -413,7 +413,7 @@ export const App: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('lena')}
-            className={`flex-1 py-1.5 rounded-lg transition ${
+            className={`flex-1 py-2 rounded-xl transition ${
               activeTab === 'lena' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
@@ -421,7 +421,7 @@ export const App: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('dena')}
-            className={`flex-1 py-1.5 rounded-lg transition ${
+            className={`flex-1 py-2 rounded-xl transition ${
               activeTab === 'dena' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
@@ -429,7 +429,7 @@ export const App: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('hisaab')}
-            className={`flex-1 py-1.5 rounded-lg transition ${
+            className={`flex-1 py-2 rounded-xl transition ${
               activeTab === 'hisaab' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
             }`}
           >
@@ -437,55 +437,57 @@ export const App: React.FC = () => {
           </button>
         </div>
 
-        {/* Quick Action Bar: WhatsApp Share | Cash Counter | Copy from Yesterday */}
-        <div className="flex flex-wrap gap-2">
+        {/* Quick Action Bar: WhatsApp Share | Cash Counter | Voice Entry | Copy from Yesterday */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* WhatsApp Share */}
           <button
             onClick={() => setIsWhatsAppOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-[#25D366] hover:bg-[#20b558] text-white shadow-sm transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#25D366] hover:bg-[#20b558] text-white shadow-md shadow-[#25D366]/20 transition transform active:scale-95"
           >
             <MessageCircle className="w-4 h-4" />
-            {lang === 'hi' ? 'WhatsApp शेयर' : 'WhatsApp Share'}
+            <span>{lang === 'hi' ? 'WhatsApp शेयर' : 'WhatsApp Share'}</span>
           </button>
 
           {/* Cash Counter */}
           <button
             onClick={() => setIsCashCounterOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 transition transform active:scale-95"
           >
             <Coins className="w-4 h-4" />
-            {lang === 'hi' ? 'नोट गिनती' : 'Cash Counter'}
+            <span>{lang === 'hi' ? 'कैश नोट गिनती' : 'Cash Denomination Counter'}</span>
           </button>
 
           {/* Voice Entry */}
           <button
             onClick={() => setIsVoiceEntryOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition transform active:scale-95"
           >
             <Mic className="w-4 h-4" />
-            {lang === 'hi' ? 'बोलकर एंट्री जोड़ें' : 'Voice Entry'}
+            <span>{lang === 'hi' ? 'बोलकर एंट्री जोड़ें' : 'Voice Entry (Hindi/EN)'}</span>
           </button>
 
           {/* Copy from Yesterday */}
           {sheet.lenaEntries.length === 0 && sheet.denaEntries.length === 0 && subscription.canEdit && (
             <button
               onClick={handleCopyFromYesterday}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition transform active:scale-95 ${
                 copiedFromYesterday
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600'
+                  ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               <Copy className="w-4 h-4" />
-              {copiedFromYesterday
-                ? (lang === 'hi' ? '✓ कॉपी हो गया!' : '✓ Copied!')
-                : (lang === 'hi' ? 'कल की पार्टियां कॉपी करें' : 'Copy Parties from Yesterday')}
+              <span>
+                {copiedFromYesterday
+                  ? (lang === 'hi' ? '✓ कल की पार्टियां कॉपी हो गईं!' : '✓ Parties Copied!')
+                  : (lang === 'hi' ? 'कल की पार्टियां कॉपी करें' : 'Clone Parties from Yesterday')}
+              </span>
             </button>
           )}
         </div>
 
-        {/* Two-Column Ledger Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Two-Column Ledger Section - Full Screen Width */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
           
           {/* Lena Side */}
           <div className={`${activeTab === 'dena' || activeTab === 'hisaab' ? 'hidden md:block' : 'block'}`}>
@@ -531,17 +533,17 @@ export const App: React.FC = () => {
         </div>
 
         {/* Remarks / Day Notes */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
-            {t.notes}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-xl transition-all duration-300">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-2.5">
+            <FileText className="w-4 h-4 text-slate-500" />
+            <span>{t.notes}</span>
           </label>
           <textarea
             value={sheet.note ?? ''}
             onChange={(e) => handleNoteChange(e.target.value)}
             rows={2}
             placeholder={t.notesPlaceholder}
-            className="w-full text-xs sm:text-sm p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none"
+            className="w-full text-xs sm:text-sm p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none transition"
           />
         </div>
 

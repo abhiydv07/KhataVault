@@ -99,37 +99,48 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
 
   return (
     <div
-      className={`rounded-2xl border shadow-sm transition-colors overflow-hidden ${
+      className={`rounded-3xl border shadow-xl transition-all duration-300 overflow-hidden ${
         isLena
-          ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/60'
-          : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/60'
+          ? 'bg-white dark:bg-slate-900 border-emerald-500/30 dark:border-emerald-500/20 shadow-emerald-950/10'
+          : 'bg-white dark:bg-slate-900 border-rose-500/30 dark:border-rose-500/20 shadow-rose-950/10'
       }`}
     >
+      {/* Top accent glow line */}
+      <div
+        className={`h-1.5 w-full ${
+          isLena
+            ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600'
+            : 'bg-gradient-to-r from-rose-500 via-pink-400 to-rose-600'
+        }`}
+      />
+
       {/* Header bar */}
       <div
-        className={`px-4 py-3 border-b flex items-center justify-between ${
+        className={`px-5 py-4 border-b flex items-center justify-between ${
           isLena
-            ? 'bg-emerald-100/70 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100'
-            : 'bg-rose-100/70 dark:bg-rose-900/40 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-100'
+            ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200/70 dark:border-emerald-800/40 text-emerald-950 dark:text-emerald-100'
+            : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200/70 dark:border-rose-800/40 text-rose-950 dark:text-rose-100'
         }`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span
-            className={`w-3 h-3 rounded-full ${
+            className={`w-3.5 h-3.5 rounded-full shadow-xs ${
               isLena ? 'bg-emerald-500' : 'bg-rose-500'
             }`}
           />
-          <h3 className="font-bold text-base sm:text-lg">
+          <h3 className="font-black text-base sm:text-lg tracking-tight">
             {isLena ? t.lenaSide : t.denaSide}
           </h3>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/70 dark:bg-slate-800/80 shadow-xs">
-            {entries.length}
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-800 shadow-xs border border-slate-200 dark:border-slate-700">
+            {entries.length} {entries.length === 1 ? 'Party' : 'Parties'}
           </span>
         </div>
 
         <div className="text-right">
-          <span className="text-xs opacity-75 block">{t.subtotal}</span>
-          <span className="font-bold font-mono text-base sm:text-lg">
+          <span className="text-[11px] font-semibold opacity-75 uppercase tracking-wider block">
+            {t.subtotal}
+          </span>
+          <span className="font-black font-mono text-base sm:text-xl">
             {formatIndianCurrency(subtotal, true)}
           </span>
         </div>
@@ -143,11 +154,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       </datalist>
 
       {/* Rows Container */}
-      <div className="p-3 sm:p-4 space-y-2.5 max-h-[500px] overflow-y-auto">
+      <div className="p-3 sm:p-5 space-y-3 max-h-[520px] overflow-y-auto">
         {entries.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-sm">
-            <Calculator className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p>{t.noEntriesYet}</p>
+          <div className="py-12 text-center text-slate-400 dark:text-slate-500 space-y-2">
+            <Calculator className="w-10 h-10 mx-auto opacity-30 stroke-[1.5]" />
+            <p className="text-xs sm:text-sm font-semibold">{t.noEntriesYet}</p>
+            <p className="text-xs opacity-75">Click "{t.addRow}" below or use Voice Entry to add counterparties.</p>
           </div>
         ) : (
           entries.map((entry, index) => {
@@ -159,14 +171,14 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
             return (
               <div
                 key={entry.id}
-                className={`group relative rounded-xl p-2.5 sm:p-3 border transition-all ${
+                className={`group relative rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 ${
                   entry.countInTotal
-                    ? 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80 shadow-sm'
-                    : 'bg-slate-100/70 dark:bg-slate-900/40 border-dashed border-slate-300 dark:border-slate-800 opacity-60'
+                    ? 'bg-slate-50/70 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700/80 shadow-xs'
+                    : 'bg-slate-100/60 dark:bg-slate-900/40 border-dashed border-slate-300 dark:border-slate-800 opacity-60'
                 }`}
               >
-                <div className="flex items-start gap-2 sm:gap-3">
-                  {/* Count in total Checkbox (Large Touch Target) */}
+                <div className="flex items-start gap-2.5 sm:gap-3">
+                  {/* Count in total Checkbox */}
                   <button
                     type="button"
                     onClick={() => handleFieldChange(index, 'countInTotal', !entry.countInTotal)}
@@ -192,7 +204,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                         value={entry.friendName}
                         onChange={(e) => handleFieldChange(index, 'friendName', e.target.value)}
                         placeholder={t.friendName}
-                        className="w-full px-2.5 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                        className="w-full px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
                       />
                     </div>
 
@@ -205,12 +217,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                           value={entry.rawExpression}
                           onChange={(e) => handleFieldChange(index, 'rawExpression', e.target.value)}
                           placeholder="1570+3135"
-                          className="w-full px-2.5 py-1.5 text-sm font-semibold font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                          className="w-full px-3 py-2 text-xs sm:text-sm font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
                         />
                         {/* Live evaluated preview badge if formula */}
                         {entry.rawExpression.trim() !== '' && (
-                          <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-0.5 px-1 flex justify-between">
-                            <span>= {formatIndianCurrency(evaluated, true)}</span>
+                          <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-1 px-1 flex justify-between">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">= {formatIndianCurrency(evaluated, true)}</span>
                           </div>
                         )}
                       </div>
@@ -225,11 +237,11 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                             inputMode="text"
                             value={entry.rawUplineExpression ?? ''}
                             onChange={(e) => handleFieldChange(index, 'rawUplineExpression', e.target.value)}
-                            placeholder="U/L (e.g. 500 or -200)"
-                            className="w-full px-2.5 py-1.5 text-sm font-semibold font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                            placeholder="U/L (500 or -200)"
+                            className="w-full px-3 py-2 text-xs sm:text-sm font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition"
                           />
                           {entry.rawUplineExpression && entry.rawUplineExpression.trim() !== '' && (
-                            <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-0.5 px-1">
+                            <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-1 px-1">
                               U/L: {formatIndianCurrency(uplineEval, true)}
                             </div>
                           )}
@@ -243,7 +255,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemove(index)}
-                    className="p-1.5 mt-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition"
+                    className="p-2 mt-1 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition opacity-80 group-hover:opacity-100"
                     title="Delete row"
                     aria-label="Delete row"
                   >
@@ -257,12 +269,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       </div>
 
       {/* Add Row Button & Bottom summary */}
-      <div className="p-3 border-t border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="p-3.5 sm:p-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 flex flex-col sm:flex-row items-center justify-between gap-3">
         {isReadOnly ? (
           <button
             type="button"
             onClick={onOpenBilling}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition"
           >
             <Lock className="w-4 h-4" />
             <span>Trial Expired — Upgrade to Add Rows</span>
@@ -271,20 +283,20 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
           <button
             type="button"
             onClick={handleAddRow}
-            className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition ${
+            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shadow-md transition transform active:scale-95 ${
               isLena
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
-                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
             }`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 stroke-[3]" />
             <span>{t.addRow}</span>
           </button>
         )}
 
         {!isLena && uplineSubtotal !== 0 && (
           <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Total U/L: <span className="font-mono font-bold">{formatIndianCurrency(uplineSubtotal, true)}</span>
+            Total Upline (U/L): <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{formatIndianCurrency(uplineSubtotal, true)}</span>
           </div>
         )}
       </div>

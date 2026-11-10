@@ -181,6 +181,46 @@ export const subscriptionService = {
   },
 
   /**
+   * Activate subscription with specific payment method (UPI, QR, Net Banking, Card, Razorpay)
+   */
+  async activateWithMethod(
+    plan: PlanType,
+    method: 'upi' | 'qr' | 'netbanking' | 'card' | 'razorpay',
+    referenceId?: string
+  ): Promise<UserSubscription> {
+    const now = Date.now();
+    const durationMs = plan === 'yearly' ? 365 * 86400000 : 30 * 86400000;
+    const paymentId = referenceId || `pay_${method}_${Date.now()}`;
+
+    const updated: UserSubscription = {
+      status: 'active',
+      planType: plan,
+      trialEndsAt: now,
+      currentPeriodStart: now,
+      currentPeriodEnd: now + durationMs,
+      razorpaySubscriptionId: paymentId,
+      isExpired: false,
+      daysRemaining: plan === 'yearly' ? 365 : 30,
+      canEdit: true,
+      canViewReports: true,
+      canExport: true,
+      invoices: [
+        {
+          id: paymentId,
+          date: new Date().toISOString().split('T')[0],
+          amount: plan === 'yearly' ? 2499 : 299,
+          plan,
+          status: 'paid',
+        },
+      ],
+    };
+
+    localStorage.setItem(MOCK_SUB_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event('subscription_change'));
+    return updated;
+  },
+
+  /**
    * Initiate Razorpay Subscription / Payment
    */
   async startSubscriptionCheckout(
