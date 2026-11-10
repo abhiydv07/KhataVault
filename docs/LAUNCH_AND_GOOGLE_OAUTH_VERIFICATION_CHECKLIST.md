@@ -117,3 +117,4 @@ All 20 tests verify:
 * Web Crypto AES-GCM 256-bit passphrase encryption & decryption.
 * Multi-day monthly and yearly reports aggregation with top debtors/creditors.
 * 7-day trial calculation and paywall permission gating.
+

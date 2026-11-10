@@ -133,3 +133,4 @@ npm run build
 2. **Minimum Google Scope**: Requests strictly `https://www.googleapis.com/auth/drive.appdata`. We cannot view, access, or touch your personal Drive files.
 3. **Client-Side Encryption**: Optional AES-GCM encryption ensures data is ciphertext before it ever leaves your browser.
 4. **Self-Serve Data Deletion**: Users can erase all files from Google Drive AppData with a single click in Settings.
+
