@@ -286,7 +286,7 @@ export const storageService = {
       exportedAt: string;
       months: Record<string, MonthHisaabFile>;
     } = {
-      appName: 'LekhaSetu',
+      appName: 'KhataSetu',
       version: 1,
       exportedAt: new Date().toISOString(),
       months: {}

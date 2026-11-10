@@ -22,12 +22,12 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('LENA DENA HISAAB', 14, 14);
+  doc.text('KHATASETU', 14, 14);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(203, 213, 225); // slate-300
-  doc.text('Ledger & Daily Hisaab Financial Statement', 14, 20);
+  doc.text('Commercial Ledger & Daily Settlement Statement', 14, 20);
 
   // Period on the right
   doc.setFontSize(10);
@@ -191,7 +191,7 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      `Lena Dena Hisaab • 100% Private Ledger • Stored in User Google Drive • Page ${i} of ${pageCount}`,
+      `KhataSetu • 100% Private Commercial Ledger • Stored in User Google Drive • Page ${i} of ${pageCount}`,
       105,
       290,
       { align: 'center' }
@@ -199,6 +199,6 @@ export async function exportReportToPdf(report: PeriodReport): Promise<void> {
   }
 
   // Trigger download
-  const filename = `Lena_Dena_Hisaab_${report.periodKey}_Statement.pdf`;
+  const filename = `KhataSetu_${report.periodKey}_Statement.pdf`;
   doc.save(filename);
 }

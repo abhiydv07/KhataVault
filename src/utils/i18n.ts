@@ -2,7 +2,7 @@ export type Language = 'en' | 'hi';
 
 export const translations = {
   en: {
-    appName: 'LekhaSetu',
+    appName: 'KhataSetu',
     appSubtitle: 'Enterprise Commercial Ledger & Daily Settlement Suite',
     
     // Core Ledger Sides (Commercial / Legal standard)
@@ -77,7 +77,7 @@ export const translations = {
     copyFromYesterdayDone: '✓ Cloned!',
   },
   hi: {
-    appName: 'लेखासेतु (LekhaSetu)',
+    appName: 'खातासेतु (KhataSetu)',
     appSubtitle: 'व्यापारिक बहीखाता एवं दैनिक समाशोधन प्रणाली',
     
     // Core Ledger Sides (Commercial / Legal Hindi standard)

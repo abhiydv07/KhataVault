@@ -10,7 +10,7 @@ export async function exportReportToExcel(report: PeriodReport): Promise<void> {
 
   // 1. Executive Summary Sheet
   const summaryData = [
-    ['LENA DENA HISAAB - FINANCIAL REPORT'],
+    ['KHATASETU - COMMERCIAL FINANCIAL REPORT'],
     ['Report Period', report.periodLabel],
     ['Report Type', report.periodType.toUpperCase()],
     ['Generated On', new Date().toLocaleString('en-IN')],
@@ -85,6 +85,6 @@ export async function exportReportToExcel(report: PeriodReport): Promise<void> {
   XLSX.utils.book_append_sheet(wb, wsParties, 'Party Balances');
 
   // Generate & trigger download
-  const filename = `Lena_Dena_Hisaab_${report.periodKey}_Report.xlsx`;
+  const filename = `KhataSetu_${report.periodKey}_Report.xlsx`;
   XLSX.writeFile(wb, filename);
 }

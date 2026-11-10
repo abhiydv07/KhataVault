@@ -43,7 +43,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [backupStatus, setBackupStatus] = useState<string | null>(null);
-  const [pinInput, setPinInput] = useState<string>(() => localStorage.getItem('lekhasetu_app_pin') || '');
+  const [pinInput, setPinInput] = useState<string>(
+    () => localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin') || ''
+  );
   const [isPinSaved, setIsPinSaved] = useState(false);
 
   if (!isOpen) return null;
@@ -52,9 +54,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     e.preventDefault();
     const trimmed = pinInput.trim();
     if (trimmed === '') {
+      localStorage.removeItem('khatasetu_app_pin');
       localStorage.removeItem('lekhasetu_app_pin');
     } else if (/^\d{4}$/.test(trimmed)) {
-      localStorage.setItem('lekhasetu_app_pin', trimmed);
+      localStorage.setItem('khatasetu_app_pin', trimmed);
     } else {
       alert('PIN must be exactly 4 numeric digits.');
       return;
@@ -71,7 +74,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `LekhaSetu_Complete_Backup_${dateStr}.json`;
+      a.download = `KhataSetu_Complete_Backup_${dateStr}.json`;
       a.click();
       URL.revokeObjectURL(url);
       setBackupStatus('Backup downloaded successfully!');
@@ -328,7 +331,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
               <div>
-                {localStorage.getItem('lekhasetu_app_pin') ? (
+                {localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin') ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                     <Lock className="w-3.5 h-3.5" /> Enabled
                   </span>
@@ -406,7 +409,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex flex-wrap items-center gap-3 text-xs">
               <a
                 href="#privacy"
-                onClick={(e) => { e.preventDefault(); alert("Privacy Policy: Lena Dena Hisaab stores all ledger records strictly inside your own Google Drive (drive.appdata). We do not store, view, or sell your financial data."); }}
+                onClick={(e) => { e.preventDefault(); alert("Privacy Policy: KhataSetu stores all ledger records strictly inside your own Google Drive (drive.appdata). We do not store, view, or sell your financial data."); }}
                 className="text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
               >
                 Privacy Policy <ExternalLink className="w-3 h-3" />

@@ -53,14 +53,14 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
       `💸 कैश चार्ज : ₹${formatIndianCurrency(results.cashChargeAmount)}\n` +
       `⚖️ *शुद्ध फ़र्क : ₹${formatIndianCurrency(Math.abs(results.farak))}*\n\n` +
       `${verdictLabel}\n\n` +
-      `_— Lena Dena Hisaab App_`
+      `_— KhataSetu (खातासेतु) App_`
     : `📊 *Today's Hisaab — ${dateLabel}*\n\n` +
       `🟢 Total Lena  : ₹${formatIndianCurrency(results.totalLena)}\n` +
       `🔴 Total Dena  : ₹${formatIndianCurrency(results.totalDena)}\n` +
       `💸 Cash Charge : ₹${formatIndianCurrency(results.cashChargeAmount)}\n` +
       `⚖️ *Net Farak : ₹${formatIndianCurrency(Math.abs(results.farak))}*\n\n` +
       `${verdictLabel}\n\n` +
-      `_— Lena Dena Hisaab App_`;
+      `_— KhataSetu App_`;
 
   // ---- Party rows that have a name & a non-zero amount ----
   const activeLena = lenaEntries.filter((e) => e.friendName.trim() && e.countInTotal && e.evaluatedAmount !== 0);
@@ -69,8 +69,8 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   const partyReminderMsg = (name: string, amount: number, side: 'lena' | 'dena') => {
     const sign = side === 'lena' ? 'लेना' : 'देना';
     return isHi
-      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का हिसाब:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*\n\n_Lena Dena Hisaab App_`
-      : `Namaste *${name}* Ji 🙏\n\nYour today's balance:\n*₹${formatIndianCurrency(Math.abs(amount))} ${side === 'lena' ? 'LENA (you owe us)' : 'DENA (we owe you)'}*\n\n_Lena Dena Hisaab App_`;
+      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का हिसाब:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*\n\n_KhataSetu App_`
+      : `Namaste *${name}* Ji 🙏\n\nYour today's balance:\n*₹${formatIndianCurrency(Math.abs(amount))} ${side === 'lena' ? 'LENA (you owe us)' : 'DENA (we owe you)'}*\n\n_KhataSetu App_`;
   };
 
   return (

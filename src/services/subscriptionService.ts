@@ -238,7 +238,7 @@ export const subscriptionService = {
       key: keyId,
       amount: amount,
       currency: 'INR',
-      name: 'Lena Dena Hisaab',
+      name: 'KhataSetu',
       description: `${plan === 'yearly' ? 'Yearly Plan (Discounted)' : 'Monthly Plan'} Subscription`,
       prefill: {
         email: userEmail,

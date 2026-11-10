@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('LekhaSetu ErrorBoundary caught an unhandled error:', error, errorInfo);
+    console.error('KhataSetu ErrorBoundary caught an unhandled error:', error, errorInfo);
   }
 
   private handleEmergencyExport = () => {
@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const dump: Record<string, string | null> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('lena_dena_hisaab_')) {
+        if (key && (key.startsWith('khatasetu_') || key.startsWith('lena_dena_hisaab_'))) {
           dump[key] = localStorage.getItem(key);
         }
       }
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `LekhaSetu_Emergency_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `KhataSetu_Emergency_Backup_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

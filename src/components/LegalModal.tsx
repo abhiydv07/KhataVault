@@ -136,13 +136,13 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   <HardDrive className="w-4 h-4" /> Strict Zero-Server Financial Storage Policy
                 </h4>
                 <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                  <strong>Lena Dena Hisaab</strong> NEVER stores your financial records, friend names, amounts, or calculations on our servers or databases. All hisaab data is stored directly in <strong>your own Google Drive</strong> in the isolated <code>drive.appdata</code> folder.
+                  <strong>KhataSetu</strong> NEVER stores your financial records, party names, amounts, or calculations on our servers or databases. All ledger data is stored directly in <strong>your own Google Drive</strong> in the isolated <code>drive.appdata</code> folder.
                 </p>
               </div>
 
               <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">1. Information We Collect</h4>
               <p>
-                When you use Lena Dena Hisaab, we collect only the minimal metadata necessary to authenticate your account and manage your subscription:
+                When you use KhataSetu, we collect only the minimal metadata necessary to authenticate your account and manage your subscription:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-xs">
                 <li>Google Account Email, Name, and Profile Photo (for authentication via Supabase Auth).</li>
@@ -155,7 +155,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </p>
               <ul className="list-disc pl-5 space-y-1 text-xs">
                 <li>We CANNOT read, list, view, or modify your personal Google Drive files, Google Docs, photos, or sheets.</li>
-                <li>Only JSON files created specifically by Lena Dena Hisaab (e.g. <code>2026-11.json</code>) reside in this isolated folder.</li>
+                <li>Only JSON files created specifically by KhataSetu (e.g. <code>2026-11.json</code>) reside in this isolated folder.</li>
                 <li>Other third-party apps cannot access your hisaab files in this folder.</li>
               </ul>
 
@@ -176,7 +176,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             <div className="space-y-4">
               <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">1. Nature of Service</h4>
               <p>
-                Lena Dena Hisaab is a productivity calculation and ledger tool designed to help small business owners and individuals track peer receivables (Lena) and payables (Dena). It does not provide banking, financial advisory, or tax filing services.
+                KhataSetu is a productivity calculation and commercial ledger suite designed to help businesses and individuals track counterparties, receivables, and payables. It does not provide banking, financial advisory, or tax filing services.
               </p>
 
               <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">2. Subscription & Trial</h4>
@@ -277,7 +277,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   Does it work offline?
                 </h5>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                  Yes, Lena Dena Hisaab works 100% offline. All entries are saved locally and automatically sync to your Google Drive when internet reconnects.
+                  Yes, KhataSetu works 100% offline. All entries are saved locally and automatically sync to your Google Drive when internet reconnects.
                 </p>
               </div>
             </div>

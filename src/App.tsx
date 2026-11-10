@@ -68,7 +68,7 @@ export const App: React.FC = () => {
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isCashCounterOpen, setIsCashCounterOpen] = useState(false);
   const [isLocked, setIsLocked] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem('lekhasetu_app_pin'));
+    return Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'));
   });
 
   const [friends, setFriends] = useState<FriendSummary[]>([]);
@@ -335,7 +335,7 @@ export const App: React.FC = () => {
         saveStatus={saveStatus}
         syncState={syncState}
         subscription={subscription}
-        hasPin={Boolean(localStorage.getItem('lekhasetu_app_pin'))}
+        hasPin={Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'))}
         onLockApp={() => setIsLocked(true)}
       />
 
@@ -589,7 +589,7 @@ export const App: React.FC = () => {
           </button>
         </div>
         <p className="text-[11px] text-slate-400">
-          LekhaSetu — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
+          KhataSetu — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
         </p>
       </footer>
 
