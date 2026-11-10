@@ -13,12 +13,16 @@ import {
   ExternalLink,
   KeyRound,
   Download,
-  Upload
+  Upload,
+  Volume2,
+  VolumeX,
+  QrCode
 } from 'lucide-react';
 import { syncManager, SyncState } from '../services/syncManager';
 import { authService } from '../services/supabase';
 import { googleDriveService } from '../services/googleDrive';
 import { storageService } from '../utils/storage';
+import { audioService } from '../utils/audioService';
 import { Language } from '../utils/i18n';
 
 interface SettingsModalProps {
@@ -47,8 +51,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     () => localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin') || ''
   );
   const [isPinSaved, setIsPinSaved] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => audioService.isEnabled());
+  const [upiInput, setUpiInput] = useState<string>(() => localStorage.getItem('khatasetu_upi_id') || '');
+  const [isUpiSaved, setIsUpiSaved] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    audioService.setEnabled(next);
+    setSoundEnabled(next);
+    if (next) {
+      audioService.playEntryAdded();
+    }
+  };
+
+  const handleSaveUpi = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = upiInput.trim();
+    if (trimmed === '') {
+      localStorage.removeItem('khatasetu_upi_id');
+    } else {
+      localStorage.setItem('khatasetu_upi_id', trimmed);
+    }
+    setIsUpiSaved(true);
+    setTimeout(() => setIsUpiSaved(false), 2000);
+  };
 
   const handleSavePin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,6 +388,69 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {isPinSaved ? 'Saved!' : 'Save PIN'}
               </button>
             </form>
+          </div>
+
+          {/* UPI ID for WhatsApp Reminders */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                  <QrCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                    Merchant UPI ID (GPay / PhonePe / Paytm)
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Appends instant UPI payment links to WhatsApp reminder messages.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveUpi} className="flex gap-2">
+              <input
+                type="text"
+                value={upiInput}
+                onChange={(e) => setUpiInput(e.target.value)}
+                placeholder="e.g. 9876543210@paytm or shop@okhdfcbank"
+                className="flex-1 px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+              >
+                {isUpiSaved ? 'Saved!' : 'Save UPI'}
+              </button>
+            </form>
+          </div>
+
+          {/* Audio Chime Feedback */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  Audio Chimes & Sound Effects
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Soundbox-style audible confirmation when adding rows and settling accounts.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleSound}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                soundEnabled
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {soundEnabled ? 'Enabled' : 'Muted'}
+            </button>
           </div>
 
           {/* Manual Offline Backup & Restore */}

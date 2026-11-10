@@ -75,6 +75,9 @@ export const translations = {
     cashCounter: 'Physical Cash Counter',
     copyFromYesterday: 'Clone Counterparties from Previous Day',
     copyFromYesterdayDone: '✓ Cloned!',
+    voiceEntry: 'Voice Entry',
+    firmSwitcher: 'Switch Firm / Book',
+    calculator: 'Pocket Calculator',
   },
   hi: {
     appName: 'खातासेतु (KhataSetu)',
@@ -150,5 +153,8 @@ export const translations = {
     cashCounter: 'रोकड़ / नोट गिनती',
     copyFromYesterday: 'कल के पक्षकार कॉपी करें',
     copyFromYesterdayDone: '✓ कॉपी हो गया!',
+    voiceEntry: 'बोलकर एंट्री जोड़ें',
+    firmSwitcher: 'फर्म / बहीखाता बदलें',
+    calculator: 'पॉकेट कैलकुलेटर',
   }
 };

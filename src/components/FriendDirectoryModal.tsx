@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Search, Users, Clock, Calendar } from 'lucide-react';
+import { X, Search, Users, Clock, Calendar, FileText, Loader2 } from 'lucide-react';
 import { FriendSummary } from '../types/hisaab';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
 import { Language, translations } from '../utils/i18n';
+import { exportPartyStatementPdf } from '../utils/exportPartyPdf';
 
 interface FriendDirectoryModalProps {
   isOpen: boolean;
@@ -18,9 +19,21 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
   lang,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [exportingParty, setExportingParty] = useState<string | null>(null);
   const t = translations[lang];
 
   if (!isOpen) return null;
+
+  const handleDownloadStatement = async (name: string) => {
+    try {
+      setExportingParty(name);
+      await exportPartyStatementPdf(name);
+    } catch (err: any) {
+      alert('Could not generate party statement: ' + (err?.message || String(err)));
+    } finally {
+      setExportingParty(null);
+    }
+  };
 
   const filtered = friends.filter((f) =>
     f.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -100,7 +113,7 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Balance Display */}
+                  {/* Balance Display & Action */}
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -121,6 +134,24 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
                         </span>
                       </div>
                     </div>
+
+                    {/* Download Statement PDF Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadStatement(friend.name)}
+                      disabled={exportingParty === friend.name}
+                      className="p-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition flex items-center gap-1 shadow-xs"
+                      title={lang === 'hi' ? 'खाता विवरण पीडीएफ डाउनलोड करें' : 'Download Statement PDF'}
+                    >
+                      {exportingParty === friend.name ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <span className="hidden sm:inline">Statement</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               );

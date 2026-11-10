@@ -2,8 +2,15 @@ import { DayHisaabSheet, MonthHisaabFile, FriendSummary } from '../types/hisaab'
 import { createEmptyDaySheet } from './calculatorEngine';
 import { evaluateExpression } from './mathParser';
 
-const STORAGE_PREFIX = 'lena_dena_hisaab_';
-const MONTH_INDEX_KEY = `${STORAGE_PREFIX}all_months`;
+function getStoragePrefix(): string {
+  if (typeof window === 'undefined') return 'lena_dena_hisaab_';
+  const activeId = localStorage.getItem('khatasetu_active_firm_id') || 'default';
+  return activeId === 'default' ? 'lena_dena_hisaab_' : `lena_dena_hisaab_${activeId}_`;
+}
+
+function getMonthIndexKey(): string {
+  return `${getStoragePrefix()}all_months`;
+}
 
 /**
  * Storage manager that stores hisaab sheets month-by-month as JSON (e.g. 2026-11.json).
@@ -15,7 +22,7 @@ export const storageService = {
    */
   async getAllMonths(): Promise<string[]> {
     try {
-      const raw = localStorage.getItem(MONTH_INDEX_KEY);
+      const raw = localStorage.getItem(getMonthIndexKey());
       if (!raw) return [];
       const list = JSON.parse(raw);
       return Array.isArray(list) ? list.sort().reverse() : [];
@@ -31,7 +38,7 @@ export const storageService = {
     const months = await this.getAllMonths();
     if (!months.includes(monthKey)) {
       months.push(monthKey);
-      localStorage.setItem(MONTH_INDEX_KEY, JSON.stringify(months));
+      localStorage.setItem(getMonthIndexKey(), JSON.stringify(months));
     }
   },
 
@@ -40,7 +47,7 @@ export const storageService = {
    */
   async getMonthFile(monthKey: string): Promise<MonthHisaabFile> {
     try {
-      const key = `${STORAGE_PREFIX}month_${monthKey}`;
+      const key = `${getStoragePrefix()}month_${monthKey}`;
       const raw = localStorage.getItem(key);
       if (raw) {
         return JSON.parse(raw);
@@ -61,7 +68,7 @@ export const storageService = {
    */
   async saveMonthFile(file: MonthHisaabFile): Promise<void> {
     try {
-      const key = `${STORAGE_PREFIX}month_${file.month}`;
+      const key = `${getStoragePrefix()}month_${file.month}`;
       localStorage.setItem(key, JSON.stringify(file));
       await this.registerMonth(file.month);
     } catch (err) {

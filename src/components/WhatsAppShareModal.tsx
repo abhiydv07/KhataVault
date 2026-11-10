@@ -67,10 +67,20 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   const activeDena = denaEntries.filter((e) => e.friendName.trim() && e.countInTotal && e.evaluatedAmount !== 0);
 
   const partyReminderMsg = (name: string, amount: number, side: 'lena' | 'dena') => {
-    const sign = side === 'lena' ? 'लेना' : 'देना';
+    const sign = side === 'lena' ? (isHi ? 'लेना' : 'receivable') : (isHi ? 'देना' : 'payable');
+    const upiId = (typeof window !== 'undefined' ? localStorage.getItem('khatasetu_upi_id') : '')?.trim();
+    let upiSection = '';
+
+    if (upiId && side === 'lena') {
+      const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('KhataSetu Settlement')}&am=${Math.abs(amount)}&cu=INR`;
+      upiSection = isHi
+        ? `\n\n📲 *तुरंत UPI से भुगतान करें (GPay / PhonePe / Paytm):*\n${upiLink}`
+        : `\n\n📲 *Pay directly via UPI (GPay / PhonePe / Paytm):*\n${upiLink}`;
+    }
+
     return isHi
-      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का हिसाब:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*\n\n_KhataSetu App_`
-      : `Namaste *${name}* Ji 🙏\n\nYour today's balance:\n*₹${formatIndianCurrency(Math.abs(amount))} ${side === 'lena' ? 'LENA (you owe us)' : 'DENA (we owe you)'}*\n\n_KhataSetu App_`;
+      ? `नमस्ते *${name}* जी 🙏\n\nआपका आज का खाता शेष:\n*₹${formatIndianCurrency(Math.abs(amount))} ${sign} है।*${upiSection}\n\n_— KhataSetu (खातासेतु) App_`
+      : `Namaste *${name}* Ji 🙏\n\nYour current account balance:\n*₹${formatIndianCurrency(Math.abs(amount))} (${side === 'lena' ? 'You owe us' : 'We owe you'})*${upiSection}\n\n_— KhataSetu App_`;
   };
 
   return (

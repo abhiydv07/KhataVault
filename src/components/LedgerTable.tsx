@@ -4,6 +4,7 @@ import { LedgerEntry } from '../types/hisaab';
 import { evaluateExpression } from '../utils/mathParser';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
 import { Language, translations } from '../utils/i18n';
+import { audioService } from '../utils/audioService';
 
 interface LedgerTableProps {
   type: 'lena' | 'dena';
@@ -43,6 +44,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       updatedAt: Date.now(),
     };
     onChange([...entries, newEntry]);
+    audioService.playEntryAdded();
   };
 
   // Update a specific row field
@@ -79,6 +81,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
     onDeleteRow(target, index, type);
     const updated = entries.filter((_, i) => i !== index);
     onChange(updated);
+    audioService.playDelete();
   };
 
   // Calculate side subtotal

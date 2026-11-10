@@ -14,15 +14,21 @@ import { UndoToast } from './components/UndoToast';
 import { WhatsAppShareModal } from './components/WhatsAppShareModal';
 import { CashCounterModal } from './components/CashCounterModal';
 import { AppLockModal } from './components/AppLockModal';
+import { VoiceEntryModal } from './components/VoiceEntryModal';
+import { FirmSwitcherModal } from './components/FirmSwitcherModal';
+import { PocketCalculatorModal } from './components/PocketCalculatorModal';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
 import { UserSubscription } from './types/subscription';
 import { calculateSheet, createEmptyDaySheet } from './utils/calculatorEngine';
+import { evaluateExpression } from './utils/mathParser';
 import { storageService } from './utils/storage';
+import { firmManager, FirmProfile } from './utils/firmManager';
 import { Language, translations } from './utils/i18n';
 import { syncManager, SyncState } from './services/syncManager';
 import { authService } from './services/supabase';
 import { subscriptionService } from './services/subscriptionService';
-import { FileText, MessageCircle, Coins, Copy } from 'lucide-react';
+import { FileText, MessageCircle, Coins, Copy, Mic } from 'lucide-react';
 
 export const App: React.FC = () => {
   // 1. Core State
@@ -67,6 +73,10 @@ export const App: React.FC = () => {
   });
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isCashCounterOpen, setIsCashCounterOpen] = useState(false);
+  const [isVoiceEntryOpen, setIsVoiceEntryOpen] = useState(false);
+  const [isFirmSwitcherOpen, setIsFirmSwitcherOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [activeFirm, setActiveFirm] = useState<FirmProfile>(() => firmManager.getActiveFirm());
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     return Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'));
   });
@@ -117,10 +127,16 @@ export const App: React.FC = () => {
     };
     window.addEventListener('subscription_change', handleSubChange);
 
+    const handleFirmChange = () => {
+      setActiveFirm(firmManager.getActiveFirm());
+    };
+    window.addEventListener('khatasetu_firm_changed', handleFirmChange);
+
     return () => {
       unsubSync();
       unsubAuth();
       window.removeEventListener('subscription_change', handleSubChange);
+      window.removeEventListener('khatasetu_firm_changed', handleFirmChange);
     };
   }, []);
 
@@ -149,7 +165,7 @@ export const App: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [selectedDate]);
+  }, [selectedDate, activeFirm]);
 
   // 3. Auto-save sheet with debounce & cloud sync queue
   const triggerAutoSave = (updatedSheet: DayHisaabSheet) => {
@@ -196,6 +212,26 @@ export const App: React.FC = () => {
     const next = { ...sheet, denaEntries: entries };
     setSheet(next);
     triggerAutoSave(next);
+  };
+
+  const handleAddVoiceEntry = (name: string, rawAmount: string, type: 'lena' | 'dena') => {
+    const now = Date.now();
+    const newEntry: LedgerEntry = {
+      id: `entry_${now}_${Math.random().toString(36).substring(2, 7)}`,
+      friendName: name,
+      rawExpression: rawAmount,
+      evaluatedAmount: evaluateExpression(rawAmount),
+      countInTotal: true,
+      upline: type === 'lena' ? undefined : 0,
+      rawUplineExpression: type === 'lena' ? undefined : '',
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (type === 'lena') {
+      handleLenaChange([...sheet.lenaEntries, newEntry]);
+    } else {
+      handleDenaChange([...sheet.denaEntries, newEntry]);
+    }
   };
 
   const handleHisaabBlockChange = (hisaab: HisaabBlock) => {
@@ -337,6 +373,9 @@ export const App: React.FC = () => {
         subscription={subscription}
         hasPin={Boolean(localStorage.getItem('khatasetu_app_pin') || localStorage.getItem('lekhasetu_app_pin'))}
         onLockApp={() => setIsLocked(true)}
+        activeFirmName={activeFirm.name}
+        onOpenFirmSwitcher={() => setIsFirmSwitcherOpen(true)}
+        onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
       {/* Paywall Banner if trial/subscription is expired */}
@@ -406,6 +445,15 @@ export const App: React.FC = () => {
           >
             <Coins className="w-4 h-4" />
             {lang === 'hi' ? 'नोट गिनती' : 'Cash Counter'}
+          </button>
+
+          {/* Voice Entry */}
+          <button
+            onClick={() => setIsVoiceEntryOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition"
+          >
+            <Mic className="w-4 h-4" />
+            {lang === 'hi' ? 'बोलकर एंट्री जोड़ें' : 'Voice Entry'}
           </button>
 
           {/* Copy from Yesterday */}
@@ -618,6 +666,36 @@ export const App: React.FC = () => {
         onUnlock={() => setIsLocked(false)}
         lang={lang}
       />
+
+      {/* Voice Entry Modal */}
+      <VoiceEntryModal
+        isOpen={isVoiceEntryOpen}
+        onClose={() => setIsVoiceEntryOpen(false)}
+        onAddEntry={handleAddVoiceEntry}
+        lang={lang}
+      />
+
+      {/* Multi-Firm / Book Switcher Modal */}
+      <FirmSwitcherModal
+        isOpen={isFirmSwitcherOpen}
+        onClose={() => setIsFirmSwitcherOpen(false)}
+        activeFirm={activeFirm}
+        onFirmSelected={(f) => {
+          setActiveFirm(f);
+          storageService.getDaySheet(selectedDate).then(setSheet);
+          storageService.getFriendSummaries().then(setFriends);
+        }}
+        lang={lang}
+      />
+
+      {/* Floating Pocket Calculator */}
+      <PocketCalculatorModal
+        isOpen={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+      />
+
+      {/* Install PWA Mobile Banner */}
+      <PwaInstallBanner lang={lang} />
 
     </div>
   );
