@@ -177,12 +177,12 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-2xl font-black font-mono text-slate-900 dark:text-slate-100">
-                    ₹ 2,499
+                    ₹ {SUBSCRIPTION_PLANS.yearly.priceINR.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs text-slate-500">/year</span>
                 </div>
                 <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5">
-                  ₹208/month equivalent (₹1,089 saved)
+                  ₹{Math.round(SUBSCRIPTION_PLANS.yearly.priceINR / 12)}/month equivalent
                 </div>
 
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
@@ -212,7 +212,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-2xl font-black font-mono text-slate-900 dark:text-slate-100">
-                    ₹ 299
+                    ₹ {SUBSCRIPTION_PLANS.monthly.priceINR.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs text-slate-500">/month</span>
                 </div>
@@ -251,7 +251,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
             <span>
               {isProcessing
                 ? 'Opening Payment...'
-                : `Subscribe with Razorpay (${selectedPlan === 'yearly' ? '₹ 2,499/yr' : '₹ 299/mo'})`}
+                : `Subscribe with Razorpay (₹ ${SUBSCRIPTION_PLANS[selectedPlan].priceINR.toLocaleString('en-IN')}/${selectedPlan === 'yearly' ? 'yr' : 'mo'})`}
             </span>
           </button>
 

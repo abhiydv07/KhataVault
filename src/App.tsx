@@ -8,6 +8,7 @@ import { ReportsModal } from './components/ReportsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { BillingModal } from './components/BillingModal';
+import { LegalModal, LegalTab } from './components/LegalModal';
 import { PaywallBanner } from './components/PaywallBanner';
 import { UndoToast } from './components/UndoToast';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
@@ -57,6 +58,7 @@ export const App: React.FC = () => {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
     return !localStorage.getItem('onboarding_completed');
   });
@@ -447,9 +449,55 @@ export const App: React.FC = () => {
         lang={lang}
       />
 
+      {/* Legal & Compliance Modal */}
+      <LegalModal
+        isOpen={Boolean(legalModalTab)}
+        onClose={() => setLegalModalTab(null)}
+        initialTab={legalModalTab || 'privacy'}
+        lang={lang}
+      />
+
       {/* Footer */}
-      <footer className="mt-8 border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-slate-400">
-        <p>Lena Dena Hisaab — Google Drive (appdata) Private Ledger Calculator</p>
+      <footer className="mt-8 border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
+          <button
+            onClick={() => setLegalModalTab('privacy')}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+          >
+            Privacy Policy
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => setLegalModalTab('terms')}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+          >
+            Terms of Service
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => setLegalModalTab('deletion')}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+          >
+            Data Deletion Instructions
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => setLegalModalTab('faq')}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+          >
+            FAQ & Help Tour
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => setIsBillingOpen(true)}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition text-amber-600 dark:text-amber-400 font-bold"
+          >
+            Subscription Plans
+          </button>
+        </div>
+        <p className="text-[11px] text-slate-400">
+          Lena Dena Hisaab — 100% Private Ledger Stored in Your Own Google Drive (appdata)
+        </p>
       </footer>
     </div>
   );

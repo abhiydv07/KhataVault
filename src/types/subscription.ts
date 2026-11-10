@@ -36,11 +36,15 @@ export interface UserSubscription {
   invoices: SubscriptionInvoice[];
 }
 
+// Configurable subscription pricing: easily modified here or via VITE_MONTHLY_PRICE_INR / VITE_YEARLY_PRICE_INR
+const monthlyPrice = Number(import.meta.env.VITE_MONTHLY_PRICE_INR) || 299;
+const yearlyPrice = Number(import.meta.env.VITE_YEARLY_PRICE_INR) || 2499;
+
 export const SUBSCRIPTION_PLANS: Record<PlanType, PlanConfig> = {
   monthly: {
     id: 'monthly',
     name: 'Monthly Plan',
-    priceINR: 299,
+    priceINR: monthlyPrice,
     interval: 'month',
     description: 'Billed monthly. Cancel anytime.',
     features: [
@@ -55,13 +59,13 @@ export const SUBSCRIPTION_PLANS: Record<PlanType, PlanConfig> = {
   yearly: {
     id: 'yearly',
     name: 'Yearly Plan',
-    priceINR: 2499,
+    priceINR: yearlyPrice,
     interval: 'year',
     tag: 'Save ~30% (Best Value)',
-    description: 'Billed annually (₹208/month equivalent).',
+    description: `Billed annually (₹${Math.round(yearlyPrice / 12)}/month equivalent).`,
     features: [
       'Everything in Monthly Plan',
-      'Save ₹1,089 every year (~30% discount)',
+      `Save ₹${monthlyPrice * 12 - yearlyPrice} every year`,
       'Priority customer support on WhatsApp',
       'Early access to new features & exports',
     ],
