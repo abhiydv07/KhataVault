@@ -3,6 +3,7 @@ import { X, Mic, MicOff, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { Language } from '../utils/i18n';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
 import { audioService } from '../utils/audioService';
+import { parseTextLine } from '../utils/extractionEngine';
 
 interface VoiceEntryModalProps {
   isOpen: boolean;
@@ -34,58 +35,28 @@ export const VoiceEntryModal: React.FC<VoiceEntryModalProps> = ({
     }
   }, []);
 
+  // Escape key handler for accessible dialog
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const parseVoiceInput = (text: string) => {
     if (!text.trim()) return;
-
-    // Detect Lena vs Dena
-    const lower = text.toLowerCase();
-    let type: 'lena' | 'dena' = 'lena';
-    if (
-      lower.includes('देना') ||
-      lower.includes('dena') ||
-      lower.includes('debit') ||
-      lower.includes('पे') ||
-      lower.includes('pay') ||
-      lower.includes('दिया')
-    ) {
-      type = 'dena';
-    } else if (
-      lower.includes('लेना') ||
-      lower.includes('lena') ||
-      lower.includes('credit') ||
-      lower.includes('जमा') ||
-      lower.includes('लिया')
-    ) {
-      type = 'lena';
+    const parsed = parseTextLine(text, { source: 'voice' });
+    if (parsed.partyName) {
+      setParsedName(parsed.partyName);
     }
-
-    // Extract numbers (including expressions like 500+200)
-    // Convert Devanagari numerals to standard digits if any
-    const devanagariDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
-    let normalized = text;
-    devanagariDigits.forEach((d, idx) => {
-      normalized = normalized.split(d).join(String(idx));
-    });
-
-    const numberMatch = normalized.match(/(\d+[\d+*\-/.]*)/);
-    const extractedAmount = numberMatch ? numberMatch[0] : '';
-
-    // Remove keywords & numbers to get the party name
-    let cleanName = normalized
-      .replace(extractedAmount, '')
-      .replace(/\b(लेना|देना|lena|dena|rupaye|rupees|rs|ka|ki|ke|se|ko|credit|debit|hisaab|jama|jod|add)\b/gi, '')
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
-      .trim();
-
-    if (cleanName) {
-      // Capitalize first letter
-      cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-      setParsedName(cleanName);
+    if (parsed.amount > 0 || parsed.rawExpression) {
+      setParsedAmount(parsed.rawExpression || String(parsed.amount));
     }
-    if (extractedAmount) {
-      setParsedAmount(extractedAmount);
+    if (parsed.side) {
+      setParsedType(parsed.side);
     }
-    setParsedType(type);
   };
 
   const startListening = () => {
@@ -149,7 +120,12 @@ export const VoiceEntryModal: React.FC<VoiceEntryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="voice-entry-title"
+    >
       <div className="bg-white dark:bg-slate-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
         
         {/* Header */}
@@ -159,7 +135,7 @@ export const VoiceEntryModal: React.FC<VoiceEntryModalProps> = ({
               <Mic className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <h3 id="voice-entry-title" className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 {isHi ? 'वॉयस बोलकर एंट्री जोड़ें' : 'Voice Ledger Entry'}
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               </h3>

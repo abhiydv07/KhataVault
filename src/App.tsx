@@ -47,10 +47,10 @@ export const App: React.FC = () => {
 
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
   const [activeTab, setActiveTab] = useState<'both' | 'lena' | 'dena' | 'hisaab'>('both');
-  
+
   // Theme & Language
   const [isDark, setIsDark] = useState<boolean>(() => {
-    return localStorage.getItem('theme') === 'dark' || 
+    return localStorage.getItem('theme') === 'dark' ||
       (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
 
@@ -163,7 +163,7 @@ export const App: React.FC = () => {
     const handleLocationChange = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase().replace('#', '');
-      
+
       if (path === '/privacy' || hash === 'privacy') {
         setLegalModalTab('privacy');
       } else if (path === '/terms' || hash === 'terms') {
@@ -230,7 +230,7 @@ export const App: React.FC = () => {
       try {
         await storageService.saveDaySheet(updatedSheet);
         setSaveStatus('saved');
-        
+
         // Queue this month for Google Drive synchronization
         const monthKey = updatedSheet.date.substring(0, 7);
         syncManager.queueMonthSync(monthKey);
@@ -334,8 +334,8 @@ export const App: React.FC = () => {
         ? mode === 'replace'
           ? data.note
           : sheet.note
-          ? `${sheet.note} • ${data.note}`
-          : data.note
+            ? `${sheet.note} • ${data.note}`
+            : data.note
         : sheet.note,
     };
 
@@ -448,7 +448,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      
+
       {/* Sticky Header */}
       <Header
         selectedDate={selectedDate}
@@ -495,7 +495,7 @@ export const App: React.FC = () => {
 
       {/* Main Workspace - Full-screen fluid enterprise layout */}
       <main className="flex-1 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        
+
         {/* Live Farak Verdict Hero Card */}
         <VerdictCard results={calculatedResults} lang={lang} />
 
@@ -503,33 +503,29 @@ export const App: React.FC = () => {
         <div className="flex md:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl text-xs font-bold shadow-inner">
           <button
             onClick={() => setActiveTab('both')}
-            className={`flex-1 py-2 rounded-xl transition ${
-              activeTab === 'both' ? 'bg-white dark:bg-slate-900 shadow-xs text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
-            }`}
+            className={`flex-1 py-2 rounded-xl transition ${activeTab === 'both' ? 'bg-white dark:bg-slate-900 shadow-xs text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setActiveTab('lena')}
-            className={`flex-1 py-2 rounded-xl transition ${
-              activeTab === 'lena' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
-            }`}
+            className={`flex-1 py-2 rounded-xl transition ${activeTab === 'lena' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+              }`}
           >
             {t.lena} ({sheet.lenaEntries.length})
           </button>
           <button
             onClick={() => setActiveTab('dena')}
-            className={`flex-1 py-2 rounded-xl transition ${
-              activeTab === 'dena' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
-            }`}
+            className={`flex-1 py-2 rounded-xl transition ${activeTab === 'dena' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+              }`}
           >
             {t.dena} ({sheet.denaEntries.length})
           </button>
           <button
             onClick={() => setActiveTab('hisaab')}
-            className={`flex-1 py-2 rounded-xl transition ${
-              activeTab === 'hisaab' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
-            }`}
+            className={`flex-1 py-2 rounded-xl transition ${activeTab === 'hisaab' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+              }`}
           >
             Adjustments
           </button>
@@ -578,11 +574,10 @@ export const App: React.FC = () => {
           {sheet.lenaEntries.length === 0 && sheet.denaEntries.length === 0 && subscription.canEdit && (
             <button
               onClick={handleCopyFromYesterday}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition transform active:scale-95 ${
-                copiedFromYesterday
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition transform active:scale-95 ${copiedFromYesterday
                   ? 'bg-emerald-600 text-white shadow-emerald-600/20'
                   : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
-              }`}
+                }`}
             >
               <Copy className="w-4 h-4" />
               <span>
@@ -596,7 +591,7 @@ export const App: React.FC = () => {
 
         {/* Two-Column Ledger Section - Full Screen Width */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-          
+
           {/* Lena Side */}
           <div className={`${activeTab === 'dena' || activeTab === 'hisaab' ? 'hidden md:block' : 'block'}`}>
             <LedgerTable

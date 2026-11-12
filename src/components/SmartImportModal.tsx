@@ -45,15 +45,18 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedLedgerData | null>(null);
 
-  // Gemini API key for photo & PDF AI scanning
+  // Gemini API key for photo & PDF AI scanning (in-session only, never localStorage)
   const [apiKey, setApiKey] = useState<string>(() => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('khatavault_gemini_key');
+    }
     return (
       (import.meta.env.VITE_GEMINI_API_KEY as string) ||
-      localStorage.getItem('khatavault_gemini_key') ||
-      ''
+      (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('khatavault_gemini_session_key') || '' : '')
     );
   });
   const [showKeyInput, setShowKeyInput] = useState(false);
+  const [hasConsent, setHasConsent] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +88,22 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
   const handleSaveApiKey = (key: string) => {
     const trimmed = key.trim();
     setApiKey(trimmed);
-    localStorage.setItem('khatavault_gemini_key', trimmed);
+    if (trimmed) {
+      sessionStorage.setItem('khatavault_gemini_session_key', trimmed);
+    } else {
+      sessionStorage.removeItem('khatavault_gemini_session_key');
+    }
+    setShowKeyInput(false);
+  };
+
+  const handleForgetKey = () => {
+    setApiKey('');
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('khatavault_gemini_session_key');
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('khatavault_gemini_key');
+    }
     setShowKeyInput(false);
   };
 
@@ -120,11 +138,15 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
         }
         setExtractedData(result);
       } else {
-        // Photo or PDF - requires Gemini Vision
+        // Photo or PDF - requires Gemini Vision and user consent
+        if (!hasConsent) {
+          throw new Error('Please review and check the third-party AI processing consent below before uploading your document to Google Gemini.');
+        }
+
         const currentKey = apiKey.trim();
         if (!currentKey) {
           setShowKeyInput(true);
-          throw new Error('Please enter your free Google Gemini API Key to scan photos and PDFs with AI.');
+          throw new Error('Please enter your Google Gemini API Key to scan photos and PDFs with AI.');
         }
 
         const result = await parseDocumentWithAi(selectedFile, currentKey);
@@ -390,6 +412,16 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {apiKey && (
+                    <button
+                      type="button"
+                      onClick={handleForgetKey}
+                      className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 hover:bg-rose-100 text-rose-700 dark:text-rose-300 transition"
+                      title="Remove API Key from browser session"
+                    >
+                      Forget Key
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowKeyInput(!showKeyInput)}
@@ -438,11 +470,37 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
                 </div>
               )}
 
+              {/* Third-Party AI Consent Banner for Photo/PDF scanning */}
+              {selectedFile && !selectedFile.name.toLowerCase().match(/\.(xlsx|xls|csv)$/) && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={hasConsent}
+                      onChange={(e) => setHasConsent(e.target.checked)}
+                      className="mt-0.5 rounded border-amber-400 text-purple-600 focus:ring-purple-500/40"
+                    />
+                    <span className="leading-snug">
+                      <strong>Third-Party AI Processing Consent:</strong> I agree to transmit this document to Google's Gemini Vision API for text and attribute extraction. No images or financial data are stored on KhataVault servers.
+                    </span>
+                  </label>
+                  {!apiKey.trim() && (
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold pl-6">
+                      ⚠️ A free Google Gemini API Key is required above before starting AI extraction.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Action Button: Analyze Document */}
               <button
                 type="button"
                 onClick={handleProcessFile}
-                disabled={!selectedFile || isProcessing}
+                disabled={
+                  !selectedFile ||
+                  isProcessing ||
+                  (!selectedFile.name.toLowerCase().match(/\.(xlsx|xls|csv)$/) && (!hasConsent || !apiKey.trim()))
+                }
                 className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white font-bold text-sm shadow-lg shadow-purple-600/20 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (

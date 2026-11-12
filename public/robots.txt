@@ -4,3 +4,4 @@ Disallow: /api/
 Disallow: /auth/
 
 Sitemap: https://khata-vault.vercel.app/sitemap.xml
+
