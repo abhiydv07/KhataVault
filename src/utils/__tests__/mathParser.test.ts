@@ -46,5 +46,20 @@ describe('Math Expression Parser', () => {
     const res = parseExpression('abc');
     expect(res.isValid).toBe(false);
   });
+
+  it('rejects division by zero explicitly', () => {
+    const res = parseExpression('1000/0');
+    expect(res.isValid).toBe(false);
+    expect(res.error).toMatch(/Division by zero/i);
+    expect(evaluateExpression('1000/0')).toBe(0);
+  });
+
+  it('rejects malformed syntax like ++ and unmatched parens', () => {
+    const res1 = parseExpression('(1500+200');
+    expect(res1.isValid).toBe(false);
+
+    const res2 = parseExpression('100 / / 5');
+    expect(res2.isValid).toBe(false);
+  });
 });
 

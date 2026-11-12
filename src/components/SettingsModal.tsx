@@ -23,6 +23,7 @@ import { authService } from '../services/supabase';
 import { googleDriveService } from '../services/googleDrive';
 import { storageService } from '../utils/storage';
 import { audioService } from '../utils/audioService';
+import { appConfig } from '../services/config';
 import { Language } from '../utils/i18n';
 
 interface SettingsModalProps {
@@ -56,6 +57,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     () => localStorage.getItem('khatavault_upi_id') || localStorage.getItem('khatasetu_upi_id') || ''
   );
   const [isUpiSaved, setIsUpiSaved] = useState(false);
+
+  // Keyboard accessibility: Escape to close
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -183,7 +194,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
       <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
@@ -193,7 +209,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
+              <h3 id="settings-modal-title" className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
                 Google Drive & Privacy Settings
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -261,7 +277,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               ) : (
                 <button
-                  onClick={() => authService.signInWithGoogle()}
+                  onClick={() => {
+                    if (appConfig.isDemo) {
+                      alert('Cloud sign-in is disabled in Demo Mode. All your records stay safe inside this browser.');
+                      return;
+                    }
+                    authService.signInWithGoogle();
+                  }}
                   className="text-xs font-bold px-3 py-1.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl shadow-xs"
                 >
                   Sign In

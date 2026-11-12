@@ -1,6 +1,8 @@
 import { DayHisaabSheet, MonthHisaabFile, FriendSummary } from '../types/hisaab';
 import { createEmptyDaySheet } from './calculatorEngine';
 import { evaluateExpression } from './mathParser';
+import { googleDriveService } from '../services/googleDrive';
+import { authService } from '../services/supabase';
 
 function getStoragePrefix(): string {
   if (typeof window === 'undefined') return 'lena_dena_hisaab_';
@@ -330,6 +332,124 @@ export const storageService = {
     }
 
     return { restoredMonths: monthKeys.length, restoredDays: dayCount };
+  },
+
+  /**
+   * Orchestrated Data Deletion Flow:
+   * 1. Removes all localStorage keys beginning with lena_dena_hisaab_, khatavault_, etc.
+   * 2. Removes API keys (e.g. khatavault_gemini_key) and onboarding flags.
+   * 3. Clears IndexedDB databases and CacheStorage.
+   * 4. Deletes Google Drive appDataFolder files if authenticated.
+   * 5. Invokes Supabase account/profile deletion RPC.
+   * 6. Verifies deletion by asserting zero ledger keys remain.
+   */
+  async performFullAccountDeletion(): Promise<{
+    success: boolean;
+    clearedKeysCount: number;
+    driveFilesDeleted: number;
+    verified: boolean;
+    remainingLedgerKeys: string[];
+  }> {
+    let driveFilesDeleted = 0;
+
+    // 1. Delete Google Drive AppData files if authenticated
+    try {
+      const { providerToken } = await authService.getSession();
+      if (providerToken) {
+        driveFilesDeleted = await googleDriveService.deleteAllAppData(providerToken);
+      }
+    } catch (err) {
+      console.warn('Google Drive deletion encountered an issue:', err);
+    }
+
+    // 2. Delete Supabase account/profile record
+    try {
+      await authService.deleteAccount();
+    } catch (err) {
+      console.warn('Supabase account deletion encountered an issue:', err);
+    }
+
+    // 3. Clear CacheStorage
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      try {
+        const cacheNames = await window.caches.keys();
+        for (const name of cacheNames) {
+          await window.caches.delete(name);
+        }
+      } catch (err) {
+        console.warn('Cache clearing error:', err);
+      }
+    }
+
+    // 4. Clear IndexedDB databases
+    if (typeof window !== 'undefined' && 'indexedDB' in window && (window.indexedDB as any).databases) {
+      try {
+        const dbs = await (window.indexedDB as any).databases();
+        for (const db of dbs) {
+          if (db.name) {
+            window.indexedDB.deleteDatabase(db.name);
+          }
+        }
+      } catch (err) {
+        console.warn('IndexedDB clearing error:', err);
+      }
+    }
+
+    // 5. Clear sessionStorage
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.clear();
+    }
+
+    // 6. Identify and remove all localStorage keys
+    let clearedKeysCount = 0;
+    if (typeof localStorage !== 'undefined') {
+      const allKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) allKeys.push(key);
+      }
+
+      const keysToRemove = allKeys.filter((k) =>
+        k.startsWith('lena_dena_hisaab_') ||
+        k.startsWith('khatavault_') ||
+        k.startsWith('khatasetu_') ||
+        k.startsWith('lekhasetu_') ||
+        k.startsWith('hisaab_') ||
+        k.startsWith('gdrive_mock_') ||
+        k === 'onboarding_completed' ||
+        k === 'theme' ||
+        k === 'lang' ||
+        k === 'google_drive_access_token' ||
+        k === 'google_drive_mock_connected' ||
+        k === 'khatavault_gemini_key'
+      );
+
+      for (const k of keysToRemove) {
+        localStorage.removeItem(k);
+        clearedKeysCount++;
+      }
+    }
+
+    // 7. Verify deletion: inspect remaining keys
+    const remainingLedgerKeys: string[] = [];
+    if (typeof localStorage !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('lena_dena_hisaab_') || key.startsWith('khatavault_'))) {
+          remainingLedgerKeys.push(key);
+        }
+      }
+    }
+
+    const verified = remainingLedgerKeys.length === 0;
+
+    return {
+      success: verified,
+      clearedKeysCount,
+      driveFilesDeleted,
+      verified,
+      remainingLedgerKeys,
+    };
   }
 };
 

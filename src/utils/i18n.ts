@@ -4,19 +4,19 @@ export const translations = {
   en: {
     appName: 'KhataVault',
     appSubtitle: 'Enterprise Commercial Ledger & Encrypted Settlement Suite',
-    
+
     // Core Ledger Sides (Commercial / Legal standard)
     lena: 'Receivables (Credit)',
     lenaSide: 'Receivables / Inflows (Credit Ledger)',
     dena: 'Payables (Debit)',
     denaSide: 'Payables / Outflows (Debit Ledger)',
-    
+
     // Settlement Position (Formerly Farak)
     farak: 'Net Settlement Position',
     farakVerdictLena: 'Net Receivable (Surplus to collect)',
     farakVerdictDena: 'Net Payable (Deficit to disburse)',
     farakVerdictBarabar: 'Accounts Fully Balanced & Settled',
-    
+
     // Commercial Adjustments
     cashCharge: 'Cash Handling Surcharge',
     cashChargeBase: 'Chargeable Base',
@@ -27,7 +27,7 @@ export const translations = {
     confirmation: 'Reconciliation Adjustment',
     rtgs: 'Electronic Bank Clearance (RTGS/NEFT)',
     upline: 'Counterparty Margin (U/L)',
-    
+
     // Row Fields
     countInTotal: 'Include in Reconciliation',
     friendName: 'Party / Account Entity Name',
@@ -36,7 +36,7 @@ export const translations = {
     addCustomItem: '+ Add Custom Ledger Adjustment',
     customItems: 'Custom Adjustments',
     itemTitle: 'Adjustment Head',
-    
+
     // General Actions & Navigation
     today: 'Today',
     selectDate: 'Accounting Date',
@@ -82,19 +82,19 @@ export const translations = {
   hi: {
     appName: 'खाता वॉल्ट (KhataVault)',
     appSubtitle: 'व्यापारिक बहीखाता एवं सुरक्षित दैनिक समाशोधन प्रणाली',
-    
+
     // Core Ledger Sides (Commercial / Legal Hindi standard)
     lena: 'प्राप्य राशि (जमा / Lena)',
     lenaSide: 'प्राप्य खाता / आवक (जमा Ledger)',
     dena: 'देय राशि (नामे / Dena)',
     denaSide: 'देय खाता / जावक (नामे Ledger)',
-    
+
     // Settlement Position
     farak: 'शुद्ध समाशोधन शेष (Net Position)',
     farakVerdictLena: 'शुद्ध प्राप्य शेष (वसूल योग्य / Lena)',
     farakVerdictDena: 'शुद्ध देय शेष (भुगतान योग्य / Dena)',
     farakVerdictBarabar: 'हिसाब पूर्ण संतुलित एवं बेबाक',
-    
+
     // Commercial Adjustments
     cashCharge: 'कैश हैंडलिंग प्रभार (Cash Charge)',
     cashChargeBase: 'प्रभार आधार राशि',
@@ -105,7 +105,7 @@ export const translations = {
     confirmation: 'समाशोधन समायोजन (Confirmation)',
     rtgs: 'बैंक अंतरण (RTGS/NEFT Clearance)',
     upline: 'काउंटरपार्टी मार्जिन (अपलाइन U/L)',
-    
+
     // Row Fields
     countInTotal: 'लेखा मिलान में शामिल करें',
     friendName: 'पक्षकार / खाता का नाम',
@@ -114,7 +114,7 @@ export const translations = {
     addCustomItem: '+ अन्य समायोजन जोड़ें',
     customItems: 'अन्य समायोजन मदें',
     itemTitle: 'मद का शीर्षक',
-    
+
     // General Actions & Navigation
     today: 'आज',
     selectDate: 'लेखांकन तारीख',
@@ -158,3 +158,50 @@ export const translations = {
     calculator: 'पॉकेट कैलकुलेटर',
   }
 };
+
+/**
+ * Format days count using Intl.PluralRules
+ */
+export function formatPluralDays(count: number, lang: Language = 'en'): string {
+  if (lang === 'hi') {
+    return `${count} दिन`;
+  }
+  const rules = new Intl.PluralRules('en-US');
+  const form = rules.select(count);
+  return `${count} ${form === 'one' ? 'day' : 'days'}`;
+}
+
+/**
+ * Format entry count using Intl.PluralRules
+ */
+export function formatPluralEntries(count: number, lang: Language = 'en'): string {
+  if (lang === 'hi') {
+    return `${count} ${count === 1 ? 'प्रविष्टि' : 'प्रविष्टियां'}`;
+  }
+  const rules = new Intl.PluralRules('en-US');
+  const form = rules.select(count);
+  return `${count} ${form === 'one' ? 'entry' : 'entries'}`;
+}
+
+/**
+ * Format date consistently with Intl.DateTimeFormat
+ */
+export function formatLocalizedDate(dateString: string, lang: Language = 'en'): string {
+  try {
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return new Intl.DateTimeFormat(lang === 'hi' ? 'hi-IN' : 'en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(d);
+    }
+    return dateString;
+  } catch {
+    return dateString;
+  }
+}

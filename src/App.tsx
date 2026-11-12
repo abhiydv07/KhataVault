@@ -30,6 +30,9 @@ import { Language, translations } from './utils/i18n';
 import { syncManager, SyncState } from './services/syncManager';
 import { authService } from './services/supabase';
 import { subscriptionService } from './services/subscriptionService';
+import { appConfig } from './services/config';
+import { DemoBanner } from './components/DemoBanner';
+import { MisconfiguredView } from './components/MisconfiguredView';
 import { FileText, MessageCircle, Coins, Copy, Mic, Camera } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -88,6 +91,7 @@ export const App: React.FC = () => {
     );
   });
 
+  const [isMisconfigured, setIsMisconfigured] = useState(appConfig.isMisconfigured);
   const [friends, setFriends] = useState<FriendSummary[]>([]);
 
   // Copy from Yesterday feature state
@@ -146,6 +150,39 @@ export const App: React.FC = () => {
       window.removeEventListener('subscription_change', handleSubChange);
       window.removeEventListener('khatavault_firm_changed', handleFirmChange);
       window.removeEventListener('khatasetu_firm_changed', handleFirmChange);
+    };
+  }, []);
+
+  // Sync document element lang attribute
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  // Support direct URL routes and hashes for compliance pages: /privacy, /terms, /refund, /data-deletion
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      
+      if (path === '/privacy' || hash === 'privacy') {
+        setLegalModalTab('privacy');
+      } else if (path === '/terms' || hash === 'terms') {
+        setLegalModalTab('terms');
+      } else if (path === '/refund' || hash === 'refund') {
+        setLegalModalTab('refund');
+      } else if (path === '/data-deletion' || hash === 'data-deletion' || hash === 'deletion') {
+        setLegalModalTab('deletion');
+      } else if (hash === 'faq') {
+        setLegalModalTab('faq');
+      }
+    };
+
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
     };
   }, []);
 
@@ -405,6 +442,10 @@ export const App: React.FC = () => {
 
   const t = translations[lang];
 
+  if (isMisconfigured) {
+    return <MisconfiguredView onContinueInDemo={() => setIsMisconfigured(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       
@@ -441,6 +482,9 @@ export const App: React.FC = () => {
         onOpenFirmSwitcher={() => setIsFirmSwitcherOpen(true)}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
+
+      {/* Demo Mode Persistent Banner */}
+      {appConfig.isDemo && <DemoBanner />}
 
       {/* Paywall Banner if trial/subscription is expired */}
       <PaywallBanner
@@ -692,6 +736,13 @@ export const App: React.FC = () => {
           </button>
           <span>•</span>
           <button
+            onClick={() => setLegalModalTab('refund')}
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+          >
+            Refund Policy
+          </button>
+          <span>•</span>
+          <button
             onClick={() => setLegalModalTab('deletion')}
             className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
           >
@@ -702,7 +753,7 @@ export const App: React.FC = () => {
             onClick={() => setLegalModalTab('faq')}
             className="hover:text-emerald-600 dark:hover:text-emerald-400 transition"
           >
-            FAQ & Help Tour
+            FAQ & Architecture
           </button>
           <span>•</span>
           <button
@@ -713,7 +764,7 @@ export const App: React.FC = () => {
           </button>
         </div>
         <p className="text-[11px] text-slate-400">
-          KhataVault — 100% Private Commercial Ledger Stored in Your Own Google Drive (appdata)
+          KhataVault — Local-First Commercial Ledger & Settlement Suite. Stored safely in your browser with optional private Google Drive vault backup.
         </p>
       </footer>
 

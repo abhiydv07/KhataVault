@@ -56,3 +56,4 @@ Anil Kumar,8500,,`;
     expect(result.dena[0].upline).toBe(500);
   });
 });
+

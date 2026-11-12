@@ -2,7 +2,7 @@ import { storageService } from '../utils/storage';
 import { googleDriveService } from './googleDrive';
 import { authService } from './supabase';
 
-export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'pending' | 'error' | 'unconnected';
+export type SyncStatus = 'local-only' | 'pending' | 'syncing' | 'synced' | 'error' | 'offline';
 
 export interface SyncState {
   status: SyncStatus;
@@ -10,6 +10,7 @@ export interface SyncState {
   isOnline: boolean;
   hasGoogleDrive: boolean;
   isEncrypted: boolean;
+  pendingCount: number;
   error?: string;
 }
 
@@ -19,11 +20,12 @@ type SyncListener = (state: SyncState) => void;
 
 class SyncManager {
   private state: SyncState = {
-    status: navigator.onLine ? 'unconnected' : 'offline',
+    status: !navigator.onLine ? 'offline' : 'local-only',
     lastSyncedAt: null,
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     hasGoogleDrive: false,
     isEncrypted: false,
+    pendingCount: 0,
   };
 
   private listeners: Set<SyncListener> = new Set();
@@ -33,16 +35,24 @@ class SyncManager {
   constructor() {
     this.initNetworkListeners();
     this.initAuthListener();
-    this.state.isEncrypted = Boolean(sessionStorage.getItem(PASSPHRASE_KEY));
+    if (typeof sessionStorage !== 'undefined') {
+      this.state.isEncrypted = Boolean(sessionStorage.getItem(PASSPHRASE_KEY));
+    }
   }
 
   private initNetworkListeners() {
+    if (typeof window === 'undefined') return;
+
     window.addEventListener('online', () => {
       this.state.isOnline = true;
-      if (this.token) {
+      if (this.token && this.pendingMonths.size > 0) {
         this.syncPendingMonths();
+      } else if (!this.token) {
+        this.updateStatus('local-only');
+      } else if (this.state.lastSyncedAt) {
+        this.updateStatus('synced');
       } else {
-        this.updateStatus('unconnected');
+        this.updateStatus('local-only');
       }
     });
 
@@ -57,36 +67,46 @@ class SyncManager {
       this.token = providerToken;
       this.state.hasGoogleDrive = Boolean(user && providerToken);
 
-      if (!user) {
-        this.updateStatus(this.state.isOnline ? 'unconnected' : 'offline');
+      if (!user || !providerToken) {
+        this.updateStatus(this.state.isOnline ? 'local-only' : 'offline');
       } else if (this.state.isOnline) {
-        this.syncPendingMonths();
+        if (this.pendingMonths.size > 0) {
+          this.syncPendingMonths();
+        } else if (this.state.lastSyncedAt) {
+          this.updateStatus('synced');
+        } else {
+          this.updateStatus('local-only');
+        }
       }
     });
 
-    // Initial check
     authService.getSession().then(({ user, providerToken }) => {
       this.token = providerToken;
       this.state.hasGoogleDrive = Boolean(user && providerToken);
       if (user && providerToken && this.state.isOnline) {
-        this.syncPendingMonths();
+        if (this.pendingMonths.size > 0) {
+          this.syncPendingMonths();
+        }
+      } else {
+        this.updateStatus(this.state.isOnline ? 'local-only' : 'offline');
       }
     });
   }
 
   public subscribe(listener: SyncListener): () => void {
     this.listeners.add(listener);
-    listener(this.state);
+    listener({ ...this.state });
     return () => this.listeners.delete(listener);
   }
 
   private notify() {
-    this.listeners.forEach((fn) => fn(this.state));
+    this.listeners.forEach((fn) => fn({ ...this.state }));
   }
 
   private updateStatus(status: SyncStatus, error?: string) {
     this.state.status = status;
     this.state.error = error;
+    this.state.pendingCount = this.pendingMonths.size;
     this.notify();
   }
 
@@ -94,6 +114,7 @@ class SyncManager {
    * Set or remove client-side encryption passphrase
    */
   public setPassphrase(passphrase: string | null) {
+    if (typeof sessionStorage === 'undefined') return;
     if (passphrase && passphrase.trim() !== '') {
       sessionStorage.setItem(PASSPHRASE_KEY, passphrase);
       this.state.isEncrypted = true;
@@ -105,6 +126,7 @@ class SyncManager {
   }
 
   public getPassphrase(): string | null {
+    if (typeof sessionStorage === 'undefined') return null;
     return sessionStorage.getItem(PASSPHRASE_KEY);
   }
 
@@ -113,6 +135,7 @@ class SyncManager {
    */
   public queueMonthSync(month: string) {
     this.pendingMonths.add(month);
+    this.state.pendingCount = this.pendingMonths.size;
 
     if (!this.state.isOnline) {
       this.updateStatus('offline');
@@ -120,11 +143,22 @@ class SyncManager {
     }
 
     if (!this.token) {
-      this.updateStatus('pending');
+      // Local-only: data stays in browser localStorage
+      this.updateStatus('local-only');
       return;
     }
 
+    this.updateStatus('pending');
     this.syncPendingMonths();
+  }
+
+  /**
+   * Retry pending sync
+   */
+  public retryPendingSync() {
+    if (this.token && this.state.isOnline) {
+      this.syncPendingMonths();
+    }
   }
 
   /**
@@ -132,12 +166,17 @@ class SyncManager {
    */
   public async syncPendingMonths() {
     if (!this.token || !this.state.isOnline) {
+      this.updateStatus(this.state.isOnline ? 'local-only' : 'offline');
       return;
     }
 
     const monthsToSync = Array.from(this.pendingMonths);
     if (monthsToSync.length === 0) {
-      this.updateStatus('synced');
+      if (this.state.lastSyncedAt) {
+        this.updateStatus('synced');
+      } else {
+        this.updateStatus('local-only');
+      }
       return;
     }
 
@@ -151,7 +190,7 @@ class SyncManager {
         const result = await googleDriveService.uploadMonthFile(this.token, monthFile, passphrase);
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to upload to Drive');
+          throw new Error(result.error || 'Failed to upload to Google Drive');
         }
 
         this.pendingMonths.delete(month);
@@ -160,13 +199,13 @@ class SyncManager {
       this.state.lastSyncedAt = Date.now();
       this.updateStatus('synced');
     } catch (err: any) {
-      console.error('Sync failed:', err);
-      this.updateStatus('error', err.message || 'Sync failed');
+      console.error('Google Drive sync failed:', err);
+      this.updateStatus('error', err.message || 'Drive sync error');
     }
   }
 
   /**
-   * Force full sync from Google Drive for a month
+   * Pull latest month data from Google Drive
    */
   public async pullFromDrive(month: string): Promise<boolean> {
     if (!this.token || !this.state.isOnline) return false;
@@ -190,8 +229,8 @@ class SyncManager {
       }
       return false;
     } catch (err: any) {
-      console.error('Pull failed:', err);
-      this.updateStatus('error', err.message || 'Failed to pull from Drive');
+      console.error('Pull from Google Drive failed:', err);
+      this.updateStatus('error', err.message || 'Failed to pull from Google Drive');
       return false;
     }
   }
@@ -202,4 +241,3 @@ class SyncManager {
 }
 
 export const syncManager = new SyncManager();
-

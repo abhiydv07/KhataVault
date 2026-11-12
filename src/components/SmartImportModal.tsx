@@ -70,6 +70,16 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
     }
   }, [isOpen]);
 
+  // Keyboard accessibility: Escape to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSaveApiKey = (key: string) => {
@@ -182,7 +192,12 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
   const netScanned = totalLenaScanned - totalDenaScanned;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="smart-import-title"
+    >
       <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[94vh]">
         
         {/* Header Bar */}
@@ -191,6 +206,7 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition"
             title="Close"
+            aria-label="Close Smart Import modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -205,7 +221,7 @@ export const SmartImportModal: React.FC<SmartImportModalProps> = ({
             </span>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-black text-white">
+          <h3 id="smart-import-title" className="text-xl sm:text-2xl font-black text-white">
             {isHi ? 'फ़ोटो, PDF या Excel से स्वतः बहीखाता भरें' : 'Auto-Extract & Fill Attributes from Photo, PDF or Excel'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">

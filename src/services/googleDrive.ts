@@ -23,17 +23,8 @@ export const googleDriveService = {
    * Search for month file (e.g. "2026-11.json") in appDataFolder
    */
   async findMonthFile(token: string, month: string): Promise<DriveFileInfo | null> {
-    if (token === 'mock_google_token_valid') {
-      const mockKey = `gdrive_mock_file_${month}`;
-      const hasMock = localStorage.getItem(mockKey);
-      if (hasMock) {
-        return {
-          id: `mock_drive_id_${month}`,
-          name: `${month}.json`,
-          modifiedTime: new Date().toISOString(),
-        };
-      }
-      return null;
+    if (!token || token.trim() === '') {
+      throw new Error('Google Drive authorization token is required.');
     }
 
     try {
@@ -45,6 +36,9 @@ export const googleDriveService = {
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Google Drive token expired. Please re-authenticate.');
+        }
         throw new Error(`Drive search failed: ${res.statusText}`);
       }
 
@@ -67,20 +61,8 @@ export const googleDriveService = {
     fileId: string,
     passphrase?: string
   ): Promise<MonthHisaabFile> {
-    if (token === 'mock_google_token_valid') {
-      const month = fileId.replace('mock_drive_id_', '');
-      const raw = localStorage.getItem(`gdrive_mock_file_${month}`);
-      if (!raw) {
-        throw new Error('File not found in mock drive');
-      }
-      const parsed = JSON.parse(raw);
-      if (parsed.encrypted) {
-        if (!passphrase) {
-          throw new Error('ENCRYPTION_PASSPHRASE_REQUIRED');
-        }
-        return await decryptData<MonthHisaabFile>(parsed, passphrase);
-      }
-      return parsed as MonthHisaabFile;
+    if (!token || token.trim() === '') {
+      throw new Error('Google Drive authorization token is required.');
     }
 
     try {
@@ -91,12 +73,15 @@ export const googleDriveService = {
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Google Drive token expired. Please re-authenticate.');
+        }
         throw new Error(`Drive download failed: ${res.statusText}`);
       }
 
       const payload = await res.json();
-      if (payload.encrypted) {
-        if (!passphrase) {
+      if (payload && payload.encrypted) {
+        if (!passphrase || passphrase.trim() === '') {
           throw new Error('ENCRYPTION_PASSPHRASE_REQUIRED');
         }
         return await decryptData<MonthHisaabFile>(payload as EncryptedPayload, passphrase);
@@ -117,35 +102,28 @@ export const googleDriveService = {
     monthFile: MonthHisaabFile,
     passphrase?: string
   ): Promise<SyncResult> {
+    if (!token || token.trim() === '') {
+      return {
+        success: false,
+        error: 'Google Drive authorization token is required.',
+      };
+    }
+
     const fileName = `${monthFile.month}.json`;
 
     // 1. Prepare data payload (optionally encrypted)
     let bodyContent: string;
-    if (passphrase && passphrase.trim() !== '') {
-      const encrypted = await encryptData(monthFile, passphrase);
-      bodyContent = JSON.stringify(encrypted);
-    } else {
-      bodyContent = JSON.stringify(monthFile, null, 2);
-    }
-
-    // Mock handling
-    if (token === 'mock_google_token_valid') {
-      const mockKey = `gdrive_mock_file_${monthFile.month}`;
-      const existing = localStorage.getItem(mockKey);
-      let isConflictResolved = false;
-
-      if (existing) {
-        // Create backup copy if conflict
-        const backupKey = `gdrive_mock_backup_${monthFile.month}_${Date.now()}`;
-        localStorage.setItem(backupKey, existing);
-        isConflictResolved = true;
+    try {
+      if (passphrase && passphrase.trim() !== '') {
+        const encrypted = await encryptData(monthFile, passphrase);
+        bodyContent = JSON.stringify(encrypted);
+      } else {
+        bodyContent = JSON.stringify(monthFile, null, 2);
       }
-
-      localStorage.setItem(mockKey, bodyContent);
+    } catch (err: any) {
       return {
-        success: true,
-        fileId: `mock_drive_id_${monthFile.month}`,
-        isConflictResolved,
+        success: false,
+        error: `Encryption error: ${err.message}`,
       };
     }
 
@@ -228,7 +206,7 @@ export const googleDriveService = {
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to create file: ${res.statusText}`);
+      throw new Error(`Failed to create file in Drive: ${res.statusText}`);
     }
 
     return await res.json();
@@ -237,12 +215,9 @@ export const googleDriveService = {
   /**
    * Delete all AppData files (for GDPR / User Data Deletion compliance)
    */
-  async deleteAllAppData(token: string): Promise<void> {
-    if (token === 'mock_google_token_valid') {
-      Object.keys(localStorage)
-        .filter((k) => k.startsWith('gdrive_mock_'))
-        .forEach((k) => localStorage.removeItem(k));
-      return;
+  async deleteAllAppData(token: string): Promise<number> {
+    if (!token || token.trim() === '') {
+      return 0;
     }
 
     try {
@@ -252,22 +227,24 @@ export const googleDriveService = {
         },
       });
 
-      if (!res.ok) return;
+      if (!res.ok) return 0;
       const data = await res.json();
+      let deletedCount = 0;
       if (Array.isArray(data.files)) {
         for (const file of data.files) {
-          await fetch(`${DRIVE_API_URL}/${file.id}`, {
+          const delRes = await fetch(`${DRIVE_API_URL}/${file.id}`, {
             method: 'DELETE',
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
+          if (delRes.ok) deletedCount++;
         }
       }
+      return deletedCount;
     } catch (err) {
       console.error('Error deleting AppData files:', err);
       throw err;
     }
   },
 };
-
