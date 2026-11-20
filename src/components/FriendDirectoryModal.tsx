@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { X, Search, Users, Clock, Calendar, FileText, Loader2 } from 'lucide-react';
+import { X, Search, Users, Clock, Calendar, FileText, Loader2, BookOpen } from 'lucide-react';
 import { FriendSummary } from '../types/hisaab';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
 import { Language, translations } from '../utils/i18n';
 import { exportPartyStatementPdf } from '../utils/exportPartyPdf';
+import { PartyLedgerModal } from './PartyLedgerModal';
 
 interface FriendDirectoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   friends: FriendSummary[];
   lang: Language;
+  firmName?: string;
 }
 
 export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
@@ -17,9 +19,11 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
   onClose,
   friends,
   lang,
+  firmName,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [exportingParty, setExportingParty] = useState<string | null>(null);
+  const [selectedPartyForLedger, setSelectedPartyForLedger] = useState<string | null>(null);
   const t = translations[lang];
 
   if (!isOpen) return null;
@@ -135,23 +139,35 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Download Statement PDF Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadStatement(friend.name)}
-                      disabled={exportingParty === friend.name}
-                      className="p-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition flex items-center gap-1 shadow-xs"
-                      title={lang === 'hi' ? 'खाता विवरण पीडीएफ डाउनलोड करें' : 'Download Statement PDF'}
-                    >
-                      {exportingParty === friend.name ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                      ) : (
-                        <>
-                          <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                          <span className="hidden sm:inline">Statement</span>
-                        </>
-                      )}
-                    </button>
+                    {/* View Ledger & Statement Buttons */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPartyForLedger(friend.name)}
+                        className="p-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1 shadow-xs"
+                        title={lang === 'hi' ? 'पार्टी खाता बही एवं ब्याज देखें' : 'View Full Party Ledger & Interest'}
+                      >
+                        <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="hidden sm:inline">{lang === 'hi' ? 'खाता' : 'Ledger'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadStatement(friend.name)}
+                        disabled={exportingParty === friend.name}
+                        className="p-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition flex items-center gap-1 shadow-xs"
+                        title={lang === 'hi' ? 'खाता विवरण पीडीएफ डाउनलोड करें' : 'Download Statement PDF'}
+                      >
+                        {exportingParty === friend.name ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            <span className="hidden sm:inline">Statement</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -168,6 +184,17 @@ export const FriendDirectoryModal: React.FC<FriendDirectoryModalProps> = ({
             Close
           </button>
         </div>
+
+        {/* Party Running Ledger Modal */}
+        {selectedPartyForLedger && (
+          <PartyLedgerModal
+            isOpen={true}
+            onClose={() => setSelectedPartyForLedger(null)}
+            partyName={selectedPartyForLedger}
+            lang={lang}
+            firmName={firmName}
+          />
+        )}
 
       </div>
     </div>

@@ -6,8 +6,24 @@ export interface LedgerEntry {
   countInTotal: boolean;
   upline?: number; // only relevant for Dena side (can be positive or negative)
   rawUplineExpression?: string;
+  dueDate?: string; // Optional payment due date (YYYY-MM-DD)
+  settlementStatus?: 'pending' | 'settled' | 'partial'; // Settlement flag
+  note?: string; // Optional entry memo or invoice reference
   createdAt: number;
   updatedAt: number;
+}
+
+export interface PartyTransaction {
+  date: string;
+  entryId: string;
+  type: 'lena' | 'dena';
+  amount: number;
+  rawExpression: string;
+  upline?: number;
+  dueDate?: string;
+  settlementStatus?: 'pending' | 'settled' | 'partial';
+  note?: string;
+  runningBalance: number; // positive = net Lena (receivable), negative = net Dena (payable)
 }
 
 export type CashChargeBase = 'dena' | 'lena' | 'net' | 'avl_balance';

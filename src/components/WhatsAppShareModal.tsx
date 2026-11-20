@@ -9,11 +9,13 @@ import {
   Phone, 
   Send, 
   FileText, 
-  Smartphone
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 import { CalculatedResults, LedgerEntry, FriendSummary } from '../types/hisaab';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
 import { Language } from '../utils/i18n';
+import { UpiQrModal } from './UpiQrModal';
 
 interface WhatsAppShareModalProps {
   isOpen: boolean;
@@ -101,6 +103,7 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   const [activeTab, setActiveTab] = useState<'summary' | 'detailed' | 'parties'>('summary');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [customPhone, setCustomPhone] = useState<string>('');
+  const [qrTarget, setQrTarget] = useState<{ name: string; amount: number } | null>(null);
   const [partyPhones, setPartyPhones] = useState<Record<string, string>>(() => {
     const saved: Record<string, string> = {};
     if (typeof window !== 'undefined') {
@@ -519,6 +522,15 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
                               <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setQrTarget({ name: entry.friendName, amount: entry.evaluatedAmount })}
+                            className="p-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 transition shadow-xs"
+                            title="Instant UPI Payment QR"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     );
@@ -577,6 +589,15 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
                               <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setQrTarget({ name: entry.friendName, amount: entry.evaluatedAmount })}
+                            className="p-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 transition shadow-xs"
+                            title="Instant UPI Payment QR"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     );
@@ -588,6 +609,17 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
           )}
 
         </div>
+
+        {qrTarget && (
+          <UpiQrModal
+            isOpen={true}
+            onClose={() => setQrTarget(null)}
+            partyName={qrTarget.name}
+            amount={qrTarget.amount}
+            lang={lang}
+            firmName={firmName}
+          />
+        )}
 
       </div>
     </div>

@@ -130,13 +130,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!window.confirm('Restoring this backup will merge or overwrite current records for matching dates. Continue?')) {
-      e.target.value = '';
-      return;
-    }
-
     try {
       const text = await file.text();
+
+      // Check if encrypted .khata vault
+      if (file.name.endsWith('.khata') || text.includes('KHATAVAULT_ENCRYPTED_VAULT')) {
+        const password = window.prompt('Enter your Password to decrypt and restore this .khata vault:');
+        if (!password) {
+          e.target.value = '';
+          return;
+        }
+        const result = await storageService.restoreEncryptedBackup(text, password);
+        setBackupStatus(`Decrypted & restored ${result.restoredDays} daily sheets across ${result.restoredMonths} months!`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return;
+      }
+
+      if (!window.confirm('Restoring this backup will merge or overwrite current records for matching dates. Continue?')) {
+        e.target.value = '';
+        return;
+      }
+
       const result = await storageService.restoreFullBackup(text);
       setBackupStatus(`Restored ${result.restoredDays} daily sheets across ${result.restoredMonths} months.`);
       setTimeout(() => {
@@ -146,6 +162,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       alert('Failed to restore backup: ' + err.message);
     } finally {
       e.target.value = '';
+    }
+  };
+
+  const handleExportEncryptedBackup = async () => {
+    const password = window.prompt('Enter a password to encrypt this .khata vault backup:');
+    if (!password || password.trim() === '') return;
+    try {
+      const encryptedText = await storageService.exportEncryptedBackup(password.trim());
+      const blob = new Blob([encryptedText], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `KhataVault_Encrypted_Backup_${new Date().toISOString().split('T')[0]}.khata`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setBackupStatus('Password-protected .khata vault downloaded successfully!');
+      setTimeout(() => setBackupStatus(null), 3500);
+    } catch (err: any) {
+      alert('Failed to create encrypted backup: ' + err.message);
     }
   };
 
@@ -500,15 +535,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-xs transition"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Export Full Backup (.json)</span>
+                <span>Export JSON (.json)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExportEncryptedBackup}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-xs transition"
+                title="Save password-encrypted vault backup"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span>Export Encrypted Vault (.khata)</span>
               </button>
 
               <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer transition">
                 <Upload className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Restore Backup File</span>
+                <span>Restore File (.json / .khata)</span>
                 <input
                   type="file"
-                  accept=".json,application/json"
+                  accept=".json,.khata,application/json"
                   onChange={handleImportBackup}
                   className="hidden"
                 />

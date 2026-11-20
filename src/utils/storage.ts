@@ -3,6 +3,7 @@ import { createEmptyDaySheet } from './calculatorEngine';
 import { evaluateExpression } from './mathParser';
 import { googleDriveService } from '../services/googleDrive';
 import { authService } from '../services/supabase';
+import { encryptData, decryptData } from '../services/crypto';
 
 function getStoragePrefix(): string {
   if (typeof window === 'undefined') return 'lena_dena_hisaab_';
@@ -332,6 +333,36 @@ export const storageService = {
     }
 
     return { restoredMonths: monthKeys.length, restoredDays: dayCount };
+  },
+
+  /**
+   * Export password-protected encrypted .khata vault backup
+   */
+  async exportEncryptedBackup(password: string): Promise<string> {
+    const rawBackup = await this.exportFullBackup();
+    const encrypted = await encryptData(rawBackup, password);
+    const container = {
+      format: 'KHATAVAULT_ENCRYPTED_VAULT',
+      version: 1,
+      createdAt: new Date().toISOString(),
+      payload: encrypted,
+    };
+    return JSON.stringify(container, null, 2);
+  },
+
+  /**
+   * Restore password-protected encrypted .khata vault backup
+   */
+  async restoreEncryptedBackup(
+    containerJson: string,
+    password: string
+  ): Promise<{ restoredMonths: number; restoredDays: number }> {
+    const parsed = JSON.parse(containerJson);
+    if (!parsed || parsed.format !== 'KHATAVAULT_ENCRYPTED_VAULT' || !parsed.payload) {
+      throw new Error('Invalid vault file format. File must be an encrypted .khata backup.');
+    }
+    const decryptedJson = await decryptData<string>(parsed.payload, password);
+    return this.restoreFullBackup(decryptedJson);
   },
 
   /**

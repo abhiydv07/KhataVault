@@ -33,7 +33,7 @@ import { subscriptionService } from './services/subscriptionService';
 import { appConfig } from './services/config';
 import { DemoBanner } from './components/DemoBanner';
 import { MisconfiguredView } from './components/MisconfiguredView';
-import { FileText, MessageCircle, Coins, Copy, Mic, Camera } from 'lucide-react';
+import { FileText, MessageCircle, Coins, Copy, Mic, Camera, AlertCircle } from 'lucide-react';
 
 export const App: React.FC = () => {
   // 1. Core State
@@ -377,7 +377,6 @@ export const App: React.FC = () => {
 
   // 7. Clear Day Sheet
   const handleClearSheet = async () => {
-    const t = translations[lang];
     if (window.confirm(t.confirmClear)) {
       const empty = createEmptyDaySheet(selectedDate);
       setSheet(empty);
@@ -440,6 +439,13 @@ export const App: React.FC = () => {
     return friends.map((f) => f.name);
   }, [friends]);
 
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const overdueEntries = useMemo(() => {
+    return sheet.lenaEntries.filter(
+      (e) => e.countInTotal && e.dueDate && e.dueDate < todayStr && (e.evaluatedAmount > 0 || evaluateExpression(e.rawExpression) > 0)
+    );
+  }, [sheet.lenaEntries, todayStr]);
+
   const t = translations[lang];
 
   if (isMisconfigured) {
@@ -498,6 +504,29 @@ export const App: React.FC = () => {
 
         {/* Live Farak Verdict Hero Card */}
         <VerdictCard results={calculatedResults} lang={lang} />
+
+        {/* Overdue Payment Alert Banner */}
+        {overdueEntries.length > 0 && (
+          <div className="p-3.5 bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-amber-500/15 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span className="text-slate-800 dark:text-slate-200">
+                <strong className="text-amber-700 dark:text-amber-400 font-bold">
+                  {overdueEntries.length} {lang === 'hi' ? 'उधारी भुगतान अतिदेय (Overdue):' : 'Overdue Receivable(s) on this sheet:'}
+                </strong>{' '}
+                {overdueEntries.map((e) => e.friendName).filter(Boolean).join(', ')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsWhatsAppOpen(true)}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl whitespace-nowrap shadow-xs transition text-xs flex items-center justify-center gap-1.5 self-start sm:self-auto"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{lang === 'hi' ? 'तगादा भेजें (WhatsApp)' : 'Send Takaaza (WhatsApp)'}</span>
+            </button>
+          </div>
+        )}
 
         {/* Mobile Tab Switcher */}
         <div className="flex md:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl text-xs font-bold shadow-inner">
@@ -658,6 +687,7 @@ export const App: React.FC = () => {
         onClose={() => setIsDirOpen(false)}
         friends={friends}
         lang={lang}
+        firmName={activeFirm.name}
       />
 
       {/* Monthly & Yearly Reports Modal */}

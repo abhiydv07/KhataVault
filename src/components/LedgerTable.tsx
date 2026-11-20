@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Trash2, CheckSquare, Square, Calculator, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, CheckSquare, Square, Calculator, Lock, Zap, Calendar } from 'lucide-react';
 import { LedgerEntry } from '../types/hisaab';
 import { evaluateExpression } from '../utils/mathParser';
 import { formatIndianCurrency } from '../utils/currencyFormatter';
@@ -29,9 +29,11 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
 }) => {
   const t = translations[lang];
   const isLena = type === 'lena';
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [activeDueDateRow, setActiveDueDateRow] = useState<number | null>(null);
 
-  // Add new row
-  const handleAddRow = () => {
+  // Add new row with optional autofocus
+  const handleAddRow = (focusNewRow: boolean = false) => {
     const newEntry: LedgerEntry = {
       id: `entry_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       friendName: '',
@@ -43,8 +45,61 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
+    const newIndex = entries.length;
     onChange([...entries, newEntry]);
     audioService.playEntryAdded();
+
+    if (focusNewRow) {
+      setTimeout(() => {
+        const input = document.getElementById(`input-${type}-name-${newIndex}`) as HTMLInputElement;
+        input?.focus();
+      }, 50);
+    }
+  };
+
+  // Keyboard navigation for "Munshi Speed Mode"
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    index: number,
+    field: 'name' | 'amount' | 'upline'
+  ) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (field === 'name') {
+        const nextInput = document.getElementById(`input-${type}-amount-${index}`) as HTMLInputElement;
+        nextInput?.focus();
+      } else if (field === 'amount') {
+        if (!isLena) {
+          const nextInput = document.getElementById(`input-${type}-upline-${index}`) as HTMLInputElement;
+          nextInput?.focus();
+        } else {
+          // Lena side: move to next row or auto-create new row
+          if (index < entries.length - 1) {
+            const nextRowInput = document.getElementById(`input-${type}-name-${index + 1}`) as HTMLInputElement;
+            nextRowInput?.focus();
+          } else {
+            handleAddRow(true);
+          }
+        }
+      } else if (field === 'upline') {
+        // Dena side: move to next row or auto-create new row
+        if (index < entries.length - 1) {
+          const nextRowInput = document.getElementById(`input-${type}-name-${index + 1}`) as HTMLInputElement;
+          nextRowInput?.focus();
+        } else {
+          handleAddRow(true);
+        }
+      }
+    }
+  };
+
+  // Quick Due Date setter (+7, +15, +30 days)
+  const setQuickDueDate = (index: number, days: number) => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + days);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    handleFieldChange(index, 'dueDate', dateStr);
+    setActiveDueDateRow(null);
   };
 
   // Update a specific row field
@@ -134,6 +189,9 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-800 shadow-xs border border-slate-200 dark:border-slate-700">
             {entries.length} {entries.length === 1 ? 'Party' : 'Parties'}
           </span>
+          <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20" title="Press Enter to move to next field, and Enter on last row to automatically add a new entry!">
+            <Zap className="w-3 h-3" /> Munshi Speed
+          </span>
         </div>
 
         <div className="text-right">
@@ -199,10 +257,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                     {/* Friend Name with suggestions */}
                     <div className={isLena ? 'sm:col-span-6' : 'sm:col-span-5'}>
                       <input
+                        id={`input-${type}-name-${index}`}
                         type="text"
                         list={`friend-suggestions-${type}`}
                         value={entry.friendName}
                         onChange={(e) => handleFieldChange(index, 'friendName', e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, index, 'name')}
                         placeholder={t.friendName}
                         className="w-full px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
                       />
@@ -212,10 +272,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                     <div className={isLena ? 'sm:col-span-6' : 'sm:col-span-4'}>
                       <div className="relative">
                         <input
+                          id={`input-${type}-amount-${index}`}
                           type="text"
                           inputMode="text"
                           value={entry.rawExpression}
                           onChange={(e) => handleFieldChange(index, 'rawExpression', e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, index, 'amount')}
                           placeholder="1570+3135"
                           className="w-full px-3 py-2 text-xs sm:text-sm font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
                         />
@@ -223,6 +285,71 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                         {entry.rawExpression.trim() !== '' && (
                           <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 mt-1 px-1 flex justify-between">
                             <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">= {formatIndianCurrency(evaluated, true)}</span>
+                          </div>
+                        )}
+                        {/* Due Date pill for Lena side */}
+                        {isLena && (
+                          <div className="mt-1 flex items-center gap-1.5 text-[10px]">
+                            {entry.dueDate ? (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold font-mono ${
+                                entry.dueDate < todayStr
+                                  ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300'
+                                  : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200'
+                              }`}>
+                                <Calendar className="w-2.5 h-2.5" />
+                                <span>Due: {entry.dueDate}</span>
+                                {entry.dueDate < todayStr && <span className="text-[9px] uppercase font-black text-rose-600">Overdue</span>}
+                                <button
+                                  type="button"
+                                  onClick={() => handleFieldChange(index, 'dueDate', '')}
+                                  className="ml-1 text-slate-400 hover:text-rose-600"
+                                  title="Clear due date"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ) : activeDueDateRow === index ? (
+                              <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-300 dark:border-slate-700">
+                                <span className="text-slate-400">Due:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickDueDate(index, 7)}
+                                  className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold"
+                                >
+                                  +7d
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickDueDate(index, 15)}
+                                  className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold"
+                                >
+                                  +15d
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickDueDate(index, 30)}
+                                  className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-bold"
+                                >
+                                  +30d
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveDueDateRow(null)}
+                                  className="text-slate-400 hover:text-slate-600 px-1"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setActiveDueDateRow(index)}
+                                className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 font-semibold"
+                                title="Set Credit Due Date"
+                              >
+                                <Calendar className="w-3 h-3" /> + Due Date
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -233,10 +360,12 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
                       <div className="sm:col-span-3">
                         <div className="relative">
                           <input
+                            id={`input-${type}-upline-${index}`}
                             type="text"
                             inputMode="text"
                             value={entry.rawUplineExpression ?? ''}
                             onChange={(e) => handleFieldChange(index, 'rawUplineExpression', e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, index, 'upline')}
                             placeholder="U/L (500 or -200)"
                             className="w-full px-3 py-2 text-xs sm:text-sm font-bold font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition"
                           />
@@ -282,7 +411,7 @@ export const LedgerTable: React.FC<LedgerTableProps> = ({
         ) : (
           <button
             type="button"
-            onClick={handleAddRow}
+            onClick={() => handleAddRow(true)}
             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shadow-md transition transform active:scale-95 ${
               isLena
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
