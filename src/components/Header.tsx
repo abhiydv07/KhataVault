@@ -20,7 +20,8 @@ import {
   Building2,
   Calculator as CalcIcon,
   HardDrive,
-  AlertCircle
+  AlertCircle,
+  History
 } from 'lucide-react';
 import { Language, translations } from '../utils/i18n';
 import { SyncState } from '../services/syncManager';
@@ -48,6 +49,7 @@ interface HeaderProps {
   activeFirmName?: string;
   onOpenFirmSwitcher?: () => void;
   onOpenCalculator?: () => void;
+  onOpenHistory?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -71,6 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeFirmName,
   onOpenFirmSwitcher,
   onOpenCalculator,
+  onOpenHistory,
 }) => {
   const t = translations[lang];
 
@@ -287,6 +290,19 @@ export const Header: React.FC<HeaderProps> = ({
               <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden sm:inline">{t.reports}</span>
             </button>
+
+            {/* Record History */}
+            {onOpenHistory && (
+              <button
+                onClick={onOpenHistory}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition shrink-0"
+                title={lang === 'hi' ? 'बहीखाता रिकॉर्ड इतिहास' : 'Record History & Day Books'}
+                aria-label="Open Record History"
+              >
+                <History className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="hidden sm:inline">{lang === 'hi' ? 'इतिहास' : 'History'}</span>
+              </button>
+            )}
 
             {/* Pro / Subscription Upgrade */}
             <button

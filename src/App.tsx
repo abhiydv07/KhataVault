@@ -19,6 +19,7 @@ import { FirmSwitcherModal } from './components/FirmSwitcherModal';
 import { PocketCalculatorModal } from './components/PocketCalculatorModal';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { SmartImportModal } from './components/SmartImportModal';
+import { RecordHistoryModal } from './components/RecordHistoryModal';
 import { ExtractedLedgerData } from './utils/documentScanner';
 import { DayHisaabSheet, LedgerEntry, HisaabBlock, FriendSummary } from './types/hisaab';
 import { UserSubscription } from './types/subscription';
@@ -69,6 +70,7 @@ export const App: React.FC = () => {
 
   // Modals & Directory
   const [isDirOpen, setIsDirOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBillingOpen, setIsBillingOpen] = useState(false);
@@ -487,6 +489,7 @@ export const App: React.FC = () => {
         activeFirmName={activeFirm.name}
         onOpenFirmSwitcher={() => setIsFirmSwitcherOpen(true)}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
       />
 
       {/* Demo Mode Persistent Banner */}
@@ -604,8 +607,8 @@ export const App: React.FC = () => {
             <button
               onClick={handleCopyFromYesterday}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition transform active:scale-95 ${copiedFromYesterday
-                  ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
             >
               <Copy className="w-4 h-4" />
@@ -696,6 +699,18 @@ export const App: React.FC = () => {
         onClose={() => setIsReportsOpen(false)}
         currentDate={selectedDate}
         lang={lang}
+      />
+
+      {/* Record History & Daily Diary Modal */}
+      <RecordHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onSelectDate={(newDate) => {
+          setSelectedDate(newDate);
+          setSaveStatus('saved');
+        }}
+        lang={lang}
+        firmName={activeFirm.name}
       />
 
       {/* Google Drive & Privacy Settings Modal */}
